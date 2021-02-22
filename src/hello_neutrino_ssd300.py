@@ -56,7 +56,7 @@ if __name__ == '__main__':
     parser.add_argument('--deepsearch', action='store_true', help="to consume the delta as much as possible")
     parser.add_argument('--dryrun', action='store_true', help="force all loops to early break")
     parser.add_argument('--horovod', action='store_true', help="activate horovod")
-    parser.add_argument('--device', type=str, metavar='DEVICE', default='gpu', help='Device to use, cpu or cuda',
+    parser.add_argument('--device', type=str, metavar='DEVICE', default='GPU', help='Device to use, cpu or cuda',
                         choices=['GPU', 'CPU'])
     parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
 

@@ -3,11 +3,12 @@ import os
 import torch
 import torch.nn as nn
 
-from neutrino.device import Device
-from neutrino.framework.functions import EvaluationFunction, LossFunction
-from neutrino.framework.torch_data_loader import TorchForwardPass
+from neutrino.framework.functions import LossFunction
 from neutrino.framework.torch_framework import TorchFramework
 from neutrino.framework.torch_nn import NativeOptimizerFactory, NativeSchedulerFactory
+from neutrino.framework.profiler import Device
+from neutrino.framework.torch_profiler.torch_data_loader import TorchForwardPass
+from neutrino.framework.torch_profiler.torch_inference import TorchEvaluationFunction
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 
@@ -22,12 +23,14 @@ from neutrino_torch_zoo.src.segmentation.fcn.solver import cross_entropy2d
 logger = getLogger(__name__)
 
 
-class UNetEval(EvaluationFunction):
+class UNetEval(TorchEvaluationFunction):
     def __init__(self, model_type):
         self.model_type = model_type
         self.eval_func = seg_eval_func
 
-    def apply(self, model, data_loader, device=Device.CPU, **kwargs):
+    def _compute_inference(self, model, data_loader, **kwargs):
+        # silent **kwargs
+        data_loader = data_loader.native_dl
         return self.eval_func(model=model, data_loader=data_loader, net=self.model_type)
 
 

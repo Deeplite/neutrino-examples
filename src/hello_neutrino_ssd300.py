@@ -1,11 +1,11 @@
 import argparse
 import os
 
-from neutrino.device import Device
 from neutrino_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
-from neutrino.framework.functions import EvaluationFunction, LossFunction
-from neutrino.framework.torch_data_loader import TorchForwardPass
+from neutrino.framework.functions import LossFunction
 from neutrino.framework.torch_framework import TorchFramework
+from neutrino.framework.torch_profiler.torch_data_loader import TorchForwardPass
+from neutrino.framework.torch_profiler.torch_inference import TorchEvaluationFunction
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 from neutrino_torch_zoo.wrappers.models import yolo_eval_func
@@ -15,12 +15,12 @@ from neutrino_torch_zoo.src.objectdetection.ssd300.utils.utils import dboxes300_
 logger = getLogger(__name__)
 
 
-class SSDEval(EvaluationFunction):
+class SSDEval(TorchEvaluationFunction):
     def __init__(self, net, data_root):
         self.net = net
         self.data_root = data_root
 
-    def apply(self, model, loader, device=Device.CPU, **kwargs):
+    def _compute_inference(self, model, data_loader, **kwargs):
         # same eval for ssd than yolo
         return yolo_eval_func(model=model, data_root=self.data_root, _set='voc', net=self.net, img_size=300)
 

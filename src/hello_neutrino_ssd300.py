@@ -81,7 +81,7 @@ if __name__ == '__main__':
     # eval func
     eval_key = 'mAP'
     if args.dryrun:
-        def eval_func(*args, **kwargs):
+        def eval_func(model, data_splits):
             return {eval_key: 1}
     else:
         eval_func = SSDEval(net=args.arch, data_root=os.path.join(args.voc_path, 'VOC2007'))

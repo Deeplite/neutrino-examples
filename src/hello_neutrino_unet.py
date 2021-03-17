@@ -128,7 +128,7 @@ if __name__ == '__main__':
         eval_key = 'miou'
 
     if args.dryrun:
-        def eval_func(*args, **kwargs):
+        def eval_func(model, data_splits):
             return {eval_key: 1}
     else:
         eval_func = UNetEval(args.arch)

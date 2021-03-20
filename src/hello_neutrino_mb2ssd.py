@@ -1,6 +1,8 @@
 import argparse
 import os
 
+from pycocotools.coco import COCO
+
 from neutrino.framework.functions import LossFunction
 from neutrino.framework.torch_framework import TorchFramework
 from neutrino.framework.torch_profiler.torch_data_loader import TorchForwardPass
@@ -8,7 +10,7 @@ from neutrino.framework.torch_profiler.torch_inference import TorchEvaluationFun
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 from neutrino_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
-from neutrino_torch_zoo.wrappers.models import mb2_ssd_coco_gm_eval_func
+from neutrino_torch_zoo.wrappers.models import mb2_ssd_eval_func
 from neutrino_torch_zoo.src.objectdetection.mb_ssd.repo.vision.nn.multibox_loss import MultiboxLoss
 from neutrino_torch_zoo.src.objectdetection.mb_ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
 
@@ -20,8 +22,9 @@ logger = getLogger(__name__)
 class Eval(TorchEvaluationFunction):
     def _compute_inference(self, model, data_loader, **kwargs):
         # silent **kwargs
-        return mb2_ssd_coco_gm_eval_func(model=model, data_loader=data_loader)
-
+        cocoGt = COCO(f"{args.data_root}/{args.annotation_file}")
+        data_loader = data_loader.native_dl
+        return mb2_ssd_eval_func(model=model, data_loader=data_loader, gt=cocoGt)
 
 
 class SSDLoss(LossFunction):
@@ -32,9 +35,9 @@ class SSDLoss(LossFunction):
                                       center_variance=0.1, size_variance=0.2, device=device)
 
     def __call__(self, model, data):
-        model.cuda()
-        images, boxes, labels = data
-        images, boxes, labels = images.cuda(), boxes.cuda(), labels.cuda()
+        model.to(self.torch_device)
+        images, boxes, labels, _ = data
+        images, boxes, labels = images.to(self.torch_device), boxes.to(self.torch_device), labels.to(self.torch_device)
 
         confidence, locations = model(images)
         regression_loss, classification_loss = self.criterion(confidence, locations, labels, boxes)  # TODO CHANGE BOXES
@@ -45,8 +48,10 @@ class SSDLoss(LossFunction):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # model/dataset args
-    parser.add_argument('--data-root', default='/home/ehsan/data/',
-                        help='')
+    parser.add_argument('--data-root', default='/home/ehsan/data/', help='path to the dataset')
+    parser.add_argument('--dataset-type', default='coco_gm', choices=['coco_gm', 'coco'])
+    parser.add_argument('--annotation-file', default='test_data_COCO.json',
+        choices=['test_data_COCO.json', 'annotations/instances_val2017.json'])
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='mb2_ssd', help='model architecture')
@@ -64,7 +69,7 @@ if __name__ == '__main__':
 
     data_splits = get_data_splits_by_name(
         data_root=args.data_root,
-        dataset_name='coco_gm',
+        dataset_name=args.dataset_type,
         model_name=args.arch,
         batch_size=args.batch_size,
         num_workers=args.workers,
@@ -72,9 +77,9 @@ if __name__ == '__main__':
 
     )
     fp = TorchForwardPass(model_input_pattern=(0, '_', '_', '_'))
-
+    num_classes = data_splits['train'].dataset.num_classes - 1
     reference_model = get_model_by_name(model_name=args.arch,
-                                        dataset_name='coco_gm_6',
+                                        dataset_name=f'{args.dataset_type}_{num_classes}',
                                         pretrained=True,
                                         progress=True,
                                         device=device_map[args.device],)

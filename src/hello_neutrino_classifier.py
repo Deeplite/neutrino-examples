@@ -3,7 +3,7 @@ import argparse
 from neutrino.framework.torch_framework import TorchFramework
 from neutrino.job import Neutrino
 
-from neutrino_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
+from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

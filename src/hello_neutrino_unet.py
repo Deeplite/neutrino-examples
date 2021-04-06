@@ -12,14 +12,14 @@ from neutrino.framework.torch_profiler.torch_inference import TorchEvaluationFun
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 
-from neutrino_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
-from neutrino_torch_zoo.wrappers.models.segmentation.unet import unet_carvana
-from neutrino_torch_zoo.wrappers.eval import seg_eval_func
+from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
+from deeplite_torch_zoo.wrappers.models.segmentation.unet import unet_carvana
+from deeplite_torch_zoo.wrappers.eval import seg_eval_func
 
-from neutrino_torch_zoo.src.segmentation.unet_scse.repo.src.losses.multi import MultiClassCriterion
-from neutrino_torch_zoo.src.segmentation.unet_scse.repo.src.utils.scheduler import CosineWithRestarts
-from neutrino_torch_zoo.src.segmentation.unet_scse.repo.src.losses.multi import MultiClassCriterion
-from neutrino_torch_zoo.src.segmentation.fcn.solver import cross_entropy2d
+from deeplite_torch_zoo.src.segmentation.unet_scse.repo.src.losses.multi import MultiClassCriterion
+from deeplite_torch_zoo.src.segmentation.unet_scse.repo.src.utils.scheduler import CosineWithRestarts
+from deeplite_torch_zoo.src.segmentation.unet_scse.repo.src.losses.multi import MultiClassCriterion
+from deeplite_torch_zoo.src.segmentation.fcn.solver import cross_entropy2d
 
 logger = getLogger(__name__)
 

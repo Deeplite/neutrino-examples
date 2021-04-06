@@ -9,10 +9,10 @@ from neutrino.framework.torch_profiler.torch_data_loader import TorchForwardPass
 from neutrino.framework.torch_profiler.torch_inference import TorchEvaluationFunction
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
-from neutrino_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
-from neutrino_torch_zoo.wrappers.eval import mb2_ssd_eval_func
-from neutrino_torch_zoo.src.objectdetection.mb_ssd.repo.vision.nn.multibox_loss import MultiboxLoss
-from neutrino_torch_zoo.src.objectdetection.mb_ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
+from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
+from deeplite_torch_zoo.wrappers.eval import mb2_ssd_eval_func
+from deeplite_torch_zoo.src.objectdetection.mb_ssd.repo.vision.nn.multibox_loss import MultiboxLoss
+from deeplite_torch_zoo.src.objectdetection.mb_ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
 
 
 

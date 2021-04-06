@@ -3,8 +3,8 @@ import os
 
 from neutrino.framework.functions import LossFunction
 from neutrino.framework.torch_framework import TorchFramework
-from neutrino.framework.torch_profiler.torch_data_loader import TorchForwardPass
-from neutrino.framework.torch_profiler.torch_inference import TorchEvaluationFunction
+from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
+from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name

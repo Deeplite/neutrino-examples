@@ -6,9 +6,9 @@ import torch.nn as nn
 from neutrino.framework.functions import LossFunction
 from neutrino.framework.torch_framework import TorchFramework
 from neutrino.framework.torch_nn import NativeOptimizerFactory, NativeSchedulerFactory
-from neutrino.framework.profiler import Device
-from neutrino.framework.torch_profiler.torch_data_loader import TorchForwardPass
-from neutrino.framework.torch_profiler.torch_inference import TorchEvaluationFunction
+from deeplite.profiler import Device
+from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
+from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 

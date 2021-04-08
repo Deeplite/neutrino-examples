@@ -1,13 +1,13 @@
 
 <p align="center">
-  <img src="deeplite-logo-color.png" />
+  <img src="https://github.com/Deeplite/neutrino-examples/raw/master/deeplite-logo-color.png" />
 </p>
 
 # Deeplite Neutrino Examples
 
-Public examples to use [Deeplite Neutrino™](https://neutrino.deeplite.ai/documentation/index.html) engine for model architecture optimization. 
+Public examples to use [Deeplite Neutrino™](https://docs.deeplite.ai/neutrino/index.html) engine for model architecture optimization. 
 
-> **_NOTE:_**  Make sure you have obtained either a free community license or a commercial support license, [from here](https://neutrino.deeplite.ai/documentation/license.html)
+> **_NOTE:_**  Make sure you have obtained either a free community license or a commercial support license, [from here](https://docs.deeplite.ai/neutrino/license.html)
 
 ## Classification Models
 

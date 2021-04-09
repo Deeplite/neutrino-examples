@@ -49,7 +49,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # model/dataset args
     parser.add_argument('--data-root', default='/neutrino/datasets/coco2017/', help='path to the dataset')
-    parser.add_argument('--dataset-type', default='coco', choices=['coco_gm', 'coco'])
+    parser.add_argument('--dataset-type', default='coco', choices=['coco'])
     parser.add_argument('--annotation-file', default='annotations/instances_val2017.json',
         choices=['test_data_COCO.json', 'annotations/instances_val2017.json'])
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')

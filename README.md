@@ -24,19 +24,19 @@ Different object detection use-cases and examples are provided to play around wi
 To optimize a `SSD-300` model on [`VOC 2007 dataset`](http://host.robots.ox.ac.uk/pascal/VOC/), run the following,
 
 ```{.python}
-    python src/hello_neutrino_ssd300.py --arch ssd300_resnet18 --dataset --delta 0.05
+    python src/hello_neutrino_ssd300.py --arch ssd300_resnet18 --delta 0.05
 ```
 
 To optimize a `SSD-300` model with `Mobilenet_v2` backend on [`COCO dataset`](https://cocodataset.org/#home), run the following,
 
 ```{.python}
-    python src/hello_neutrino_mb2ssd.py --arch mb2_ssd --dataset --delta 0.05
+    python src/hello_neutrino_mb2ssd.py --arch mb2_ssd --delta 0.05
 ```
 
 To optimize a `YOLOv3` model on [`VOC 2007 dataset`](http://host.robots.ox.ac.uk/pascal/VOC/), run the following,
 
 ```{.python}
-    python src/hello_neutrino_yolov3.py --arch yolo3 --dataset --delta 0.05
+    python src/hello_neutrino_yolov3.py --arch yolo3 --delta 0.05
 ```
 
 The `delta` of 0.05 denotes the maximum affordable reduction in the mAP (Mean Average Precision) of the model during optimization. Feel free to play around with different object detection models and datasets, along with different `delta` values to get different optimized results. The `arch` and the `datasets` can be customized with any native PyTorch pretrained model.

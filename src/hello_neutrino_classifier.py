@@ -31,7 +31,7 @@ if __name__ == "__main__":
     data_splits = get_data_splits_by_name(dataset_name=args.dataset,
                                           data_root=args.data_root,
                                           batch_size=args.batch_size,
-                                          num_torch_workers=args.workers,
+                                          num_workers=args.workers,
                                           device=device_map[args.device])
 
     reference_model = get_model_by_name(model_name=args.arch,

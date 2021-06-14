@@ -8,7 +8,7 @@ from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
-from deeplite_torch_zoo.wrappers.eval import yolo_eval_func
+from deeplite_torch_zoo.wrappers.eval import yolo_eval_voc
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import YoloV3Loss
 
 
@@ -22,7 +22,7 @@ class YOLOEval(TorchEvaluationFunction):
 
     def _compute_inference(self, model, data_loader, **kwargs):
         # silent **kwargs
-        return yolo_eval_func(model=model, data_root=self.data_root, _set='voc', net=self.net)
+        return yolo_eval_voc(model=model, data_root=self.data_root, net=self.net)
 
 
 class YOLOLoss(LossFunction):

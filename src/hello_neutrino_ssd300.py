@@ -8,7 +8,7 @@ from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
-from deeplite_torch_zoo.wrappers.eval import yolo_eval_func
+from deeplite_torch_zoo.wrappers.eval import yolo_eval_voc
 from deeplite_torch_zoo.src.objectdetection.ssd300.model.ssd300_loss import Loss
 from deeplite_torch_zoo.src.objectdetection.ssd300.utils.utils import dboxes300_coco
 
@@ -22,7 +22,7 @@ class SSDEval(TorchEvaluationFunction):
 
     def _compute_inference(self, model, data_loader, **kwargs):
         # same eval for ssd than yolo
-        return yolo_eval_func(model=model, data_root=self.data_root, _set='voc', net=self.net, img_size=300)
+        return yolo_eval_voc(model=model, data_root=self.data_root, net=self.net, img_size=300)
 
 
 class SSDLoss(LossFunction):

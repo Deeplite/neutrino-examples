@@ -152,7 +152,8 @@ if __name__ == '__main__':
                                # uncomment these two below if you want to try other optimizer / scheduler
                                # 'optimizer': UNetNativeOptimizerFactory,
                                # 'scheduler': {'factory': UNetNativeSchedulerFactory, 'eval_based': False}
-                               }
+                               },
+                'export':{'format': ['onnx']},
               }
 
     optimized_model = Neutrino(TorchFramework(),

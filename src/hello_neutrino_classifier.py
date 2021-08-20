@@ -48,6 +48,7 @@ if __name__ == "__main__":
               'optimization': args.optimization,
               'use_horovod': args.horovod,
               'bn_fusion': args.bn_fuse,
+              'export':{'format': ['onnx']}
               }
 
     optimized_model = Neutrino(framework=TorchFramework(),

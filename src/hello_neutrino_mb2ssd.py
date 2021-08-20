@@ -103,6 +103,7 @@ if __name__ == '__main__':
               'use_horovod': args.horovod,
               'task_type': 'object_detection',
               'bn_fusion': args.bn_fuse,
+              'export':{'format': ['onnx']},
               }
 
     optimized_model = Neutrino(TorchFramework(),

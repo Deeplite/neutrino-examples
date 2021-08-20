@@ -44,7 +44,7 @@ class SSDLoss(LossFunction):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # model/dataset args
-    parser.add_argument('--voc_path', default='/neutrino/datasets/VOCdevkit/',
+    parser.add_argument('--voc_path', default='/neutrino/datasets/',
                         help='vockit data path contains VOC2007 and VOC2012.')
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
@@ -97,6 +97,7 @@ if __name__ == '__main__':
               'use_horovod': args.horovod,
               'task_type': 'object_detection',
               'bn_fusion': args.bn_fuse,
+              'export':{'format': ['onnx']},
               }
 
     optimized_model = Neutrino(TorchFramework(),

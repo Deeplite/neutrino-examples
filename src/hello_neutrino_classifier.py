@@ -44,11 +44,11 @@ if __name__ == "__main__":
               'level': args.level,
               'delta': args.delta,
               'device': args.device,
-              'onnx_precision': 'fp16' if args.fp16 else 'fp32',
               'optimization': args.optimization,
               'use_horovod': args.horovod,
               'bn_fusion': args.bn_fuse,
-              'export':{'format': ['onnx']}
+              'export':{'format': ['onnx']},
+              'onnx_precision': 'fp16' if args.fp16 else 'fp32',
               }
 
     optimized_model = Neutrino(framework=TorchFramework(),

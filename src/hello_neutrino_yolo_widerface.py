@@ -61,8 +61,8 @@ if __name__ == '__main__':
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
 
     data_splits = get_data_splits_by_name(
-        data_root=args.voc_path,
-        dataset_name='wider_face_8',
+        data_root=args.data_root,
+        dataset_name='wider_face',
         model_name=args.arch,
         batch_size=args.batch_size,
         num_workers=args.workers,
@@ -83,12 +83,12 @@ if __name__ == '__main__':
         def eval_func(model, data_splits):
             return {eval_key: 1}
     else:
-        eval_func = YOLOEval(net=args.arch, args.data_root)
+        eval_func = YOLOEval(net=args.arch, data_root=args.data_root)
 
     # loss
     loss_cls = YOLOLoss
     loss_kwargs = {
-        'num_classes': args.num_classes
+        'num_classes': args.num_classes,
         'device': device_map[args.device]
     }
 

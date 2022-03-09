@@ -77,7 +77,7 @@ if __name__ == '__main__':
     )
     fp = TorchForwardPass(model_input_pattern=(0, '_', '_', '_'))
 
-    reference_model = get_model_by_name(model_name=args.arch[:5] + '_6' + args.arch[-1:],
+    reference_model = get_model_by_name(model_name=args.arch,
                                         dataset_name='coco_80',
                                         pretrained=True,
                                         progress=True,

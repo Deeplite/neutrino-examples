@@ -51,8 +51,8 @@ if __name__ == '__main__':
                         help='vockit data path contains VOC2007 and VOC2012.')
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
-    parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo3', help='model architecture',
-        choices=['yolo3', 'yolo4s', 'yolo4m', 'yolo4l', 'yolo4x', 'yolo5s', 'yolo5m', 'yolo5l', 'yolo5x'])
+    parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo5m', help='model architecture',
+        choices=['yolo4s', 'yolo4m', 'yolo5s', 'yolo5m'])
 
     # neutrino args
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.05, help='accuracy drop tolerance')

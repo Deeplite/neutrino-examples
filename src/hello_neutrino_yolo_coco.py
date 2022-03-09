@@ -53,7 +53,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo5s', help='model architecture',
-        choices=['yolo4s', 'yolo4m', 'yolo5n', 'yolo5s', 'yolo5m'])
+        choices=['yolo4s', 'yolo4m', 'yolo5_6n', 'yolo5_6s', 'yolo5_6m'])
 
     # neutrino args
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.05, help='accuracy drop tolerance')
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     )
     fp = TorchForwardPass(model_input_pattern=(0, '_', '_', '_'))
 
-    reference_model = get_model_by_name(model_name=args.arch[:5] + '_6' + args.arch[-1:],
+    reference_model = get_model_by_name(model_name=args.arch,
                                         dataset_name='coco_80',
                                         pretrained=True,
                                         progress=True,

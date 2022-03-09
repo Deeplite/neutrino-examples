@@ -9,7 +9,8 @@ from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
 from deeplite_torch_zoo.wrappers.eval import yolo_eval_voc
-from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import YoloV3Loss
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
+    YoloV5Loss
 
 
 logger = getLogger(__name__)
@@ -26,10 +27,10 @@ class YOLOEval(TorchEvaluationFunction):
 
 
 class YOLOLoss(LossFunction):
-    def __init__(self, num_classes=20, device='cuda'):
+    def __init__(self, num_classes=20, device='cuda', model=None):
         # when num classes is not provided to YoloV3Loss it uses 20 as the default.
         # that's okay here because the whole file assumes voc dataset for testing.
-        self.criterion = YoloV3Loss(num_classes=num_classes, device=device)
+        self.criterion = YoloV5Loss(num_classes=num_classes, model=model, device=device)
         self.torch_device = device
 
     def __call__(self, model, data):
@@ -50,8 +51,8 @@ if __name__ == '__main__':
                         help='vockit data path contains VOC2007 and VOC2012.')
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
-    parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo3', help='model architecture',
-        choices=['yolo3', 'yolo4s', 'yolo4m', 'yolo4l', 'yolo4x', 'yolo5s', 'yolo5m', 'yolo5l', 'yolo5x'])
+    parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo5m', help='model architecture',
+        choices=['yolo4s', 'yolo4m', 'yolo5s', 'yolo5m'])
 
     # neutrino args
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.05, help='accuracy drop tolerance')
@@ -91,7 +92,7 @@ if __name__ == '__main__':
 
     # loss
     loss_cls = YOLOLoss
-    loss_kwargs = {'device': device_map[args.device]}
+    loss_kwargs = {'device': device_map[args.device], 'model': reference_model}
 
     # custom config
     config = {'deepsearch': args.deepsearch,

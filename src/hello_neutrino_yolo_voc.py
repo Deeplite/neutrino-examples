@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo5m', help='model architecture',
-        choices=['yolo4s', 'yolo4m', 'yolo5s', 'yolo5m'])
+        choices=['yolo4s', 'yolo4m', 'yolo5_6s', 'yolo5_6m'])
 
     # neutrino args
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.05, help='accuracy drop tolerance')
@@ -95,14 +95,15 @@ if __name__ == '__main__':
     loss_kwargs = {'device': device_map[args.device], 'model': reference_model}
 
     # custom config
-    config = {'deepsearch': args.deepsearch,
-              'delta': args.delta,
-              'device': args.device,
-              'use_horovod': args.horovod,
-              'task_type': 'object_detection',
-              'bn_fusion': args.bn_fuse,
-              'export':{'format': ['onnx']},
-              }
+    config = {
+        'deepsearch': args.deepsearch,
+        'delta': args.delta,
+        'device': args.device,
+        'use_horovod': args.horovod,
+        'task_type': 'object_detection',
+        'bn_fusion': args.bn_fuse,
+        'export': {'format': ['onnx']},
+    }
 
     optimized_model = Neutrino(TorchFramework(),
                                data=data_splits,

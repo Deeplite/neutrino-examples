@@ -52,7 +52,7 @@ if __name__ == '__main__':
                         help='coco data path contains train2017 and val2017')
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
-    parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo5s', help='model architecture',
+    parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo4m', help='model architecture',
         choices=['yolo4s', 'yolo4m', 'yolo5_6n', 'yolo5_6s', 'yolo5_6m'])
 
     # neutrino args

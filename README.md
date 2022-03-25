@@ -51,3 +51,10 @@ To optimize a `U-Net` style model backend on [`VOC 2007 dataset`](http://host.ro
 The `delta` of 0.02 denotes the maximum affordable reduction in the mIOU (Mean Intersection over Union) of the model during optimization. Feel free to play around with different segmentation models and datasets, along with different `delta` values to get different optimized results. The `arch` and the `datasets` can be customized with any native PyTorch pretrained model.
 
 
+## Quantizing models for DLRT
+To quantize a YOLO model for inference with DeepliteRT, run the following 
+```
+python src/hello_neutrino_yolo_quantization.py -a yolo5_6s --dataset voc -r datasets/VOCdevkit
+```
+To improve latency at the risk of weaker model accuracy, add the `--conv11` flag to quantize 1x1 convolutions.
+To improve the accuracy, try using the `--skip_layers_ratio` argument to skip quantization of the first convolution layers

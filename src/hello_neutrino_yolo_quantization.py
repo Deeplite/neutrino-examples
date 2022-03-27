@@ -3,7 +3,8 @@ import argparse
 from neutrino.framework.torch_framework import TorchFramework
 from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from neutrino.job import Neutrino
-from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
+
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
 
 from pathlib import Path
 from pycocotools.coco import COCO
@@ -126,6 +127,7 @@ yolo5_6_finetune_config = {
     'weight_decay': 0.00036,
 }
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # model/dataset args
@@ -134,8 +136,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo3', help='model architecture',
-        choices=['yolo3', 'yolo4s', 'yolo4m', 'yolo4l', 'yolo4x', 'yolo5s', 'yolo5m', 'yolo5l', 'yolo5x', 'yolo5_6n',
-                 'yolo5_6s', 'yolo5_6m'])
+        choices=['yolo3', 'yolo4s', 'yolo4m', 'yolo5_6n', 'yolo5_6s', 'yolo5_6m'])
 
     # neutrino args
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.05, help='accuracy drop tolerance')
@@ -186,7 +187,7 @@ if __name__ == '__main__':
                                         dataset_name=args.dataset + '_' + str(args.num_classes),
                                         pretrained=True,
                                         progress=True,
-                                        device=device_map[args.device],)
+                                        device=device_map[args.device])
 
     # eval func
     eval_key = 'mAP'
@@ -199,10 +200,11 @@ if __name__ == '__main__':
 
     # loss
     loss_cls = YOLOLoss
-    loss_kwargs = {'device': device_map[args.device],
-                   'model': reference_model,  # subject to dataset
-                   'num_classes': args.num_classes
-                   }
+    loss_kwargs = {
+        'device': device_map[args.device],
+        'model': reference_model,  # subject to dataset
+        'num_classes': args.num_classes
+    }
 
     config = {
         'task_type': '__custom__',

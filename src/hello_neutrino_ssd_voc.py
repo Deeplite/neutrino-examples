@@ -7,7 +7,8 @@ from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
-from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
+
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
 from deeplite_torch_zoo.wrappers.eval import vgg16_ssd_eval_func
 from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.nn.multibox_loss import MultiboxLoss
 from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import VGG_CONFIG

@@ -12,7 +12,7 @@ from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 
-from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name, get_model_by_name
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
 from deeplite_torch_zoo.wrappers.models.segmentation.unet import unet_carvana
 from deeplite_torch_zoo.wrappers.eval import seg_eval_func
 

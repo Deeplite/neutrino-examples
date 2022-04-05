@@ -5,7 +5,7 @@
 
 # Deeplite Neutrino Examples
 
-Public examples to use [Deeplite Neutrino™](https://docs.deeplite.ai/neutrino/index.html) engine for model architecture optimization. 
+Public examples to use [Deeplite Neutrino™](https://docs.deeplite.ai/neutrino/index.html) engine for model architecture optimization.
 
 > **_NOTE:_**  Make sure you have obtained either a free community license or a commercial support license, [from here](https://docs.deeplite.ai/neutrino/license.html)
 
@@ -19,7 +19,7 @@ The pretrained architecture `models` and the `datasets` are loaded from the [Dee
 
 ## Object Detection Models
 
-Different object detection use-cases and examples are provided to play around with. 
+Different object detection use-cases and examples are provided to play around with.
 
 To optimize a `SSD-300` model on [`VOC 2007 dataset`](http://host.robots.ox.ac.uk/pascal/VOC/), run the following,
 
@@ -52,9 +52,11 @@ The `delta` of 0.02 denotes the maximum affordable reduction in the mIOU (Mean I
 
 
 ## Quantizing models for DLRT
-To quantize a YOLO model for inference with DeepliteRT, run the following 
+To quantize a YOLO model for inference with DeepliteRT, run the following
 ```
 python src/hello_neutrino_yolo_quantization.py -a yolo5_6s --dataset voc -r datasets/VOCdevkit
 ```
 To improve latency at the risk of weaker model accuracy, add the `--conv11` flag to quantize 1x1 convolutions.
 To improve the accuracy, try using the `--skip_layers_ratio` argument to skip quantization of the first convolution layers
+
+If your model will process a different image resolution at runtime, pass it with `--runtime_resolution HxW` arguemnt. Ex: `--runtime_resolution 320x320`

@@ -5,6 +5,7 @@ from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from neutrino.job import Neutrino
 
 from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import Detect
 
 from pathlib import Path
 from pycocotools.coco import COCO
@@ -118,14 +119,22 @@ def get_yolo5_6_config(loop_params, lr):
     return loop_params
 
 
-# from https://github.com/ultralytics/yolov5/blob/956be8e642b5c10af4a1533e09084ca32ff4f21f/data/hyps/hyp.scratch.yaml
-
 yolo5_6_finetune_config = {
     'lr0': 0.0032,
     'lrf': 0.12,
     'momentum': 0.843,
     'weight_decay': 0.00036,
 }
+
+
+def get_runtime_resolution(runtime_resolution):
+    if runtime_resolution:
+        resolutions = []
+        for res_str in runtime_resolution:
+            dim_strs = res_str.split('x')
+            resolutions.append((int(dim_strs[0]), int(dim_strs[1])))
+        return resolutions
+    return []
 
 
 if __name__ == '__main__':
@@ -141,7 +150,6 @@ if __name__ == '__main__':
     # neutrino args
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.05, help='accuracy drop tolerance')
     parser.add_argument('--deepsearch', action='store_true', help='to consume the delta as much as possible')
-    # parser.add_argument('--quantize', type=str, default=None, help='Path to quantization config yaml file. e.g. src/configs/yolo5s_voc_quantization.yaml')
     parser.add_argument('--dryrun', action='store_true', help='force all loops to early break')
     parser.add_argument('--horovod', action='store_true', help='activate horovod')
     parser.add_argument('--device', type=str, metavar='DEVICE', default='GPU', help='Device to use, CPU or GPU',
@@ -150,6 +158,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=50, type=int, help='number of fine-tuning epochs')
     parser.add_argument('--lr', default=None, type=float, help='learning rate for training quantized model')
     parser.add_argument('--num_classes', type=int, default=None, help='Number of classes in dataset')
+    parser.add_argument('--runtime_resolution', type=str, nargs='*', default=[], help='Image resolution at runtime, if different from train dataset. e.g. \'320x320\'')
 
     # quant args
     parser.add_argument('--conv11', action='store_true', help='if set true, will quantize conv1x1 layers also')
@@ -188,6 +197,10 @@ if __name__ == '__main__':
                                         pretrained=True,
                                         progress=True,
                                         device=device_map[args.device])
+    for k, m in reference_model.named_modules():
+        if isinstance(m, Detect):
+            m.onnx_dynamic = True
+            m.inplace = False
 
     # eval func
     eval_key = 'mAP'
@@ -206,9 +219,14 @@ if __name__ == '__main__':
         'num_classes': args.num_classes
     }
 
+    resolutions = get_runtime_resolution(args.runtime_resolution)
+
     config = {
         'task_type': '__custom__',
-        'export': {'format': ['dlrt']},
+        'export': {
+            'format': ['dlrt'],
+            'kwargs': {'resolutions': resolutions}
+        },
         'optimization': 'quantization',
         'deepsearch': args.deepsearch,
         'delta': args.delta,

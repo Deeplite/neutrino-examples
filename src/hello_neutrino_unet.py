@@ -77,8 +77,8 @@ if __name__ == '__main__':
     # model/dataset args
     parser.add_argument('--dataset', choices={'carvana', 'voc'}, default='voc',
                         help="Choose whether to use carvana or voc dataset. The model's architecture will be chosen accordingly.")
-    parser.add_argument('--voc', default='/neutrino/datasets/', help='voc data path.')
-    parser.add_argument('--carvana', default='/neutrino/datasets/carvana/', help='carvana data path.')
+    parser.add_argument('--voc_path', default='/neutrino/datasets/VOCdevkit', help='voc data path.')
+    parser.add_argument('--carvana_path', default='/neutrino/datasets/carvana/', help='carvana data path.')
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=4, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('--num_classes', type=int, default=20, help='number of classes to use (only for voc)')
@@ -100,7 +100,15 @@ if __name__ == '__main__':
         print("Choosing carvana dataset")
         args.arch = 'unet'
 
-        data_splits = get_carvana_dataset(args.carvana, args.batch_size, args.workers)
+        data_splits = get_data_splits_by_name(
+            data_root=args.carvana_path,
+            dataset_name='carvana',
+            model_name=args.arch,
+            batch_size=args.batch_size,
+            num_workers=args.workers,
+            device=device_map[args.device],
+        )
+        # data_splits = get_carvana_for_unet(args.carvana, args.batch_size, args.workers)
         teacher = unet_carvana(pretrained=True, progress=True)
 
         eval_key = 'dice_coeff'
@@ -109,7 +117,7 @@ if __name__ == '__main__':
         args.arch = 'unet_scse_resnet18'
 
         data_splits = get_data_splits_by_name(
-            data_root=args.voc,
+            data_root=args.voc_path,
             dataset_name='voc',
             model_name=args.arch,
             batch_size=args.batch_size,

@@ -45,7 +45,8 @@ class SSDLoss(LossFunction):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # model/dataset args
-    parser.add_argument('--data-root', default='/neutrino/datasets/VOCdevkit/', help='path to the dataset')
+    parser.add_argument('--voc_path', default='/neutrino/datasets/VOCdevkit/',
+                        help='vockit data path contains VOC2007 and VOC2012.')
     parser.add_argument('--dataset-type', default='voc', choices=['voc'])
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
@@ -63,7 +64,7 @@ if __name__ == '__main__':
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
 
     data_splits = get_data_splits_by_name(
-        data_root=args.data_root,
+        data_root=args.voc_path,
         dataset_name=args.dataset_type,
         model_name=args.arch,
         batch_size=args.batch_size,

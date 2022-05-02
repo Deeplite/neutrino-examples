@@ -11,7 +11,7 @@ from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 
 from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
-from deeplite_torch_zoo.wrappers.eval import mb2_ssd_eval_func
+from deeplite_torch_zoo.wrappers.eval import mb2_ssd_coco_eval_func
 from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.nn.multibox_loss import MultiboxLoss
 from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
 
@@ -23,9 +23,9 @@ logger = getLogger(__name__)
 class Eval(TorchEvaluationFunction):
     def _compute_inference(self, model, data_loader, **kwargs):
         # silent **kwargs
-        cocoGt = COCO(f"{args.data_root}/{args.annotation_file}")
+        cocoGt = COCO(f"{args.coco_path}/{args.annotation_file}")
         data_loader = data_loader.native_dl
-        return mb2_ssd_eval_func(model=model, data_loader=data_loader, gt=cocoGt)
+        return mb2_ssd_coco_eval_func(model=model, data_loader=data_loader, gt=cocoGt)
 
 
 class SSDLoss(LossFunction):
@@ -49,7 +49,7 @@ class SSDLoss(LossFunction):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # model/dataset args
-    parser.add_argument('--data-root', default='/neutrino/datasets/coco2017/', help='path to the dataset')
+    parser.add_argument('--coco_path', default='/neutrino/datasets/coco2017/', help='path to the dataset')
     parser.add_argument('--dataset-type', default='coco', choices=['coco'])
     parser.add_argument('--annotation-file', default='annotations/instances_val2017.json',
         choices=['test_data_COCO.json', 'annotations/instances_val2017.json'])
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
 
     data_splits = get_data_splits_by_name(
-        data_root=args.data_root,
+        data_root=args.coco_path,
         dataset_name=args.dataset_type,
         model_name=args.arch,
         batch_size=args.batch_size,

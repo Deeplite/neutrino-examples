@@ -121,7 +121,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo3', help='model architecture',
-        choices=['yolo3', 'yolo4s', 'yolo4m', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x'])
+        choices=['yolo3', 'yolo4s', 'yolo4m', 'yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x'])
     parser.add_argument('--epochs', default=50, type=int, help='number of fine-tuning epochs')
     parser.add_argument('--lr', default=None, type=float, help='learning rate for training quantized model')
 
@@ -143,7 +143,6 @@ if __name__ == '__main__':
         batch_size=args.batch_size,
         num_workers=args.workers,
         device=device_map[args.device],
-
     )
     fp = TorchForwardPass(model_input_pattern=(0, '_', '_', '_'))
 

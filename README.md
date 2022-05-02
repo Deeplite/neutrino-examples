@@ -24,19 +24,25 @@ Different object detection use-cases and examples are provided to play around wi
 To optimize a `SSD-300` model on [`VOC 2007 dataset`](http://host.robots.ox.ac.uk/pascal/VOC/), run the following,
 
 ```{.python}
-    python src/hello_neutrino_ssd300.py --arch ssd300_resnet18 --delta 0.05
+    python src/hello_neutrino_ssd_voc.py --arch resnet18_ssd --delta 0.05 --voc_path  ~/PATH/TO/VOCdevkit
 ```
 
 To optimize a `SSD-300` model with `Mobilenet_v2` backend on [`COCO dataset`](https://cocodataset.org/#home), run the following,
 
 ```{.python}
-    python src/hello_neutrino_mb2ssd.py --arch mb2_ssd --delta 0.05
+    python src/hello_neutrino_ssd_coco.py --arch mb2_ssd --delta 0.05 --coco_path ~/PATH/TO/coco2017
 ```
 
-To optimize a `YOLOv3` model on [`VOC 2007 dataset`](http://host.robots.ox.ac.uk/pascal/VOC/), run the following,
+To optimize a `YOLOv5` model on [`VOC 2007 dataset`](http://host.robots.ox.ac.uk/pascal/VOC/), run the following,
 
 ```{.python}
-    python src/hello_neutrino_yolov3.py --arch yolo3 --delta 0.05
+    python src/hello_neutrino_yolo_voc.py --arch yolo5_6s --delta 0.05 --voc_path ~/PATH/TO/VOCdevkit
+```
+
+To optimize a `YOLOv5` model on [`COCO dataset`](https://cocodataset.org/#home), run the following,
+
+```{.python}
+    python src/hello_neutrino_yolo_coco.py --arch yolo5_6s --delta 0.05 --coco_path ~/PATH/TO/coco2017
 ```
 
 The `delta` of 0.05 denotes the maximum affordable reduction in the mAP (Mean Average Precision) of the model during optimization. Feel free to play around with different object detection models and datasets, along with different `delta` values to get different optimized results. The `arch` and the `datasets` can be customized with any native PyTorch pretrained model.
@@ -45,7 +51,7 @@ The `delta` of 0.05 denotes the maximum affordable reduction in the mAP (Mean Av
 
 To optimize a `U-Net` style model backend on [`VOC 2007 dataset`](http://host.robots.ox.ac.uk/pascal/VOC/), run the following,
 ```{.python}
-    python src/hello_neutrino_unet.py --dataset voc --delta 0.02
+    python src/hello_neutrino_unet.py --dataset voc --delta 0.02 --voc_path ~/PATH/TO/VOCdevkit
 ```
 
 The `delta` of 0.02 denotes the maximum affordable reduction in the mIOU (Mean Intersection over Union) of the model during optimization. Feel free to play around with different segmentation models and datasets, along with different `delta` values to get different optimized results. The `arch` and the `datasets` can be customized with any native PyTorch pretrained model.
@@ -54,9 +60,10 @@ The `delta` of 0.02 denotes the maximum affordable reduction in the mIOU (Mean I
 ## Quantizing models for DLRT
 To quantize a YOLO model for inference with DeepliteRT, run the following
 ```
-python src/hello_neutrino_yolo_quantization.py -a yolo5_6s --dataset voc -r datasets/VOCdevkit
+python src/hello_neutrino_yolo_quantization.py --arch yolo5_6s --dataset voc -r ~/PATH/TO/VOCdevkit
 ```
 To improve latency at the risk of weaker model accuracy, add the `--conv11` flag to quantize 1x1 convolutions.
-To improve the accuracy, try using the `--skip_layers_ratio` argument to skip quantization of the first convolution layers
+To improve the accuracy, try using the `--skip_layers_ratio` argument to skip quantization of the first x% of the convolution layers
 
-If your model will process a different image resolution at runtime, pass it with `--runtime_resolution HxW` arguemnt. Ex: `--runtime_resolution 320x320`
+If your model will process a different image resolution at runtime, pass it with `--runtime_resolution HxW` arguemnt. Ex: `--runtime_resolution 320x320`. This way the exported model
+will accept images of the correct resolution.

@@ -77,7 +77,7 @@ if __name__ == '__main__':
     # model/dataset args
     parser.add_argument('--dataset', choices={'carvana', 'voc'}, default='voc',
                         help="Choose whether to use carvana or voc dataset. The model's architecture will be chosen accordingly.")
-    parser.add_argument('--voc_path', default='/neutrino/datasets/VOCdevkit', help='voc data path.')
+    parser.add_argument('--voc_path', default='/neutrino/datasets', help='voc data path.')
     parser.add_argument('--carvana_path', default='/neutrino/datasets/carvana/', help='carvana data path.')
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=4, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')

@@ -73,8 +73,8 @@ if __name__ == '__main__':
         batch_size=args.batch_size,
         num_workers=args.workers,
         device=device_map[args.device],
-
     )
+
     fp = TorchForwardPass(model_input_pattern=(0, '_', '_'))
     num_classes = 20
     reference_model = get_model_by_name(model_name=args.arch,

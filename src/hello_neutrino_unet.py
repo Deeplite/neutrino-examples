@@ -129,7 +129,7 @@ if __name__ == '__main__':
         )
         teacher = get_model_by_name(
             model_name=args.arch,
-            dataset_name='voc_20',
+            dataset_name='voc',
             pretrained=True,
             progress=True,
             device=device_map[args.device])

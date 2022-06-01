@@ -4,7 +4,7 @@ from neutrino.framework.torch_framework import TorchFramework
 from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from neutrino.job import Neutrino
 
-from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name, get_eval_function
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import Detect
 
 from pathlib import Path
@@ -16,20 +16,18 @@ from neutrino.framework.functions import LossFunction
 from neutrino.framework.nn import NativeOptimizerFactory
 from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
 
-from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
 
 
 class YOLOEval(TorchEvaluationFunction):
-    def __init__(self, net, data_root, dataset_type, num_classes, test_img_size):
-        self.net = net
+    def __init__(self, model_name, data_root, dataset_type, num_classes, test_img_size):
         self._gt = None
         self._data_root = data_root
         self._dataset_type = dataset_type
         self._num_classes = num_classes
         self._test_img_size = test_img_size
-        self._evaluation_fn = get_eval_func(self._dataset_type)
+        self._evaluation_fn = get_eval_function(model_name=model_name, dataset_name=self._dataset_type)
 
         if self._dataset_type in ("voc", "voc07"):
             self._data_root = Path(self._data_root) / "VOC2007"
@@ -38,9 +36,8 @@ class YOLOEval(TorchEvaluationFunction):
 
     def _compute_inference(self, model, data_loader, **kwargs):
         # silent **kwargs
-        return self._evaluation_fn(model=model, data_root=self._data_root, net=self.net,
-                                   gt=self._gt, _set=self._dataset_type,
-                                   num_classes=self._num_classes, img_size=self._test_img_size)
+        return self._evaluation_fn(model=model, data_root=self._data_root,
+                                   gt=self._gt, img_size=self._test_img_size)
 
 
 class YOLOLoss(LossFunction):
@@ -53,8 +50,8 @@ class YOLOLoss(LossFunction):
         _img_size = imgs.shape[-1]
 
         imgs = imgs.to(self.torch_device)
-        p, p_d = model(imgs)
-        _, loss_giou, loss_conf, loss_cls = self.criterion(p, p_d, targets,
+        pred = model(imgs)
+        _, loss_giou, loss_conf, loss_cls = self.criterion(pred, targets,
                                                            labels_length, _img_size)
         return {'lgiou': loss_giou, 'lconf': loss_conf, 'lcls': loss_cls}
 
@@ -146,6 +143,7 @@ if __name__ == '__main__':
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo3', help='model architecture',
         choices=['yolo3', 'yolo4s', 'yolo4m', 'yolo5_6n', 'yolo5_6s', 'yolo5_6m'])
+    parser.add_argument('--test_image_size', type=int, default=448, help='image resolution for evaluation')
 
     # neutrino args
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.05, help='accuracy drop tolerance')
@@ -175,9 +173,6 @@ if __name__ == '__main__':
             args.num_classes = 20
         elif args.dataset == 'coco':
             args.num_classes = 80
-    if args.dataset == 'coco':
-        if 'yolo5' in args.arch and not 'yolo5_6' in args.arch:
-            arch_name = args.arch.replace('yolo5', 'yolo5_6')
     if args.dataset == 'wider_face':
         args.num_classes = 8
 
@@ -193,10 +188,11 @@ if __name__ == '__main__':
     fp = TorchForwardPass(model_input_pattern=(0, '_', '_', '_'))
 
     reference_model = get_model_by_name(model_name=arch_name,
-                                        dataset_name=args.dataset + '_' + str(args.num_classes),
+                                        dataset_name=args.dataset,
                                         pretrained=True,
                                         progress=True,
                                         device=device_map[args.device])
+
     for k, m in reference_model.named_modules():
         if isinstance(m, Detect):
             m.onnx_dynamic = True
@@ -208,8 +204,8 @@ if __name__ == '__main__':
         def eval_func(model, data_splits, device=None):
             return {eval_key: 1}
     else:
-        eval_func = YOLOEval(net=args.arch, data_root=args.data_root,
-                             dataset_type=args.dataset, num_classes=args.num_classes, test_img_size=448)  #TODO is 320 bad?
+        eval_func = YOLOEval(model_name=args.arch, data_root=args.data_root,
+                             dataset_type=args.dataset, test_img_size=args.test_image_size)
 
     # loss
     loss_cls = YOLOLoss

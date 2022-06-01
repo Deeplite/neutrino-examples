@@ -14,8 +14,7 @@ from neutrino.framework.torch_framework import TorchFramework
 from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
 
-from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
-from deeplite_torch_zoo.wrappers.eval import yolo_eval_voc
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name, get_eval_function
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
 
@@ -24,13 +23,13 @@ logger = getLogger(__name__)
 
 
 class YOLOEval(TorchEvaluationFunction):
-    def __init__(self, net, data_root):
-        self.net = net
+    def __init__(self, model_name, data_root):
         self.data_root = data_root
+        self._evaluation_fn = get_eval_function(dataset_name='voc', model_name=model_name)
 
     def _compute_inference(self, model, data_loader, **kwargs):
         # silent **kwargs
-        return yolo_eval_voc(model=model, data_root=self.data_root, net=self.net)
+        return self._evaluation_fn(model=model, data_root=self.data_root)
 
 
 class YOLOLoss(LossFunction):
@@ -43,8 +42,8 @@ class YOLOLoss(LossFunction):
         _img_size = imgs.shape[-1]
 
         imgs = imgs.to(self.torch_device)
-        p, p_d = model(imgs)
-        _, loss_giou, loss_conf, loss_cls = self.criterion(p, p_d, targets, labels_length, _img_size)
+        pred = model(imgs)
+        _, loss_giou, loss_conf, loss_cls = self.criterion(pred, targets, labels_length, _img_size)
 
         return {'lgiou': loss_giou, 'lconf': loss_conf, 'lcls': loss_cls}
 
@@ -147,7 +146,7 @@ if __name__ == '__main__':
     fp = TorchForwardPass(model_input_pattern=(0, '_', '_', '_'))
 
     reference_model = get_model_by_name(model_name=args.arch,
-                                        dataset_name='voc_20',
+                                        dataset_name='voc',
                                         pretrained=True,
                                         progress=True,
                                         device=device_map[args.device])

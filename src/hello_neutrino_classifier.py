@@ -30,6 +30,7 @@ if __name__ == "__main__":
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
 
     data_splits = get_data_splits_by_name(dataset_name=args.dataset,
+                                          model_name=args.arch,
                                           data_root=args.data_root,
                                           batch_size=args.batch_size,
                                           num_workers=args.workers,

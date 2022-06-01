@@ -8,8 +8,8 @@ from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 
-from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
-from deeplite_torch_zoo.wrappers.eval import vgg16_ssd_eval_func
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name, get_eval_function
+
 from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.nn.multibox_loss import MultiboxLoss
 from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import VGG_CONFIG
 
@@ -18,10 +18,13 @@ logger = getLogger(__name__)
 
 
 class Eval(TorchEvaluationFunction):
+    def __init__(self, model_name):
+        self._evaluation_fn = get_eval_function(model_name=model_name, dataset_name='coco')
+
     def _compute_inference(self, model, data_loader, **kwargs):
         # silent **kwargs
         data_loader = data_loader.native_dl
-        return vgg16_ssd_eval_func(model=model, data_loader=data_loader)
+        return self._evaluation_fn(model=model, data_loader=data_loader)
 
 
 class SSDLoss(LossFunction):
@@ -75,7 +78,7 @@ if __name__ == '__main__':
     fp = TorchForwardPass(model_input_pattern=(0, '_', '_'))
     num_classes = 20
     reference_model = get_model_by_name(model_name=args.arch,
-                                        dataset_name=f'{args.dataset_type}_{num_classes}',
+                                        dataset_name=args.dataset_type,
                                         pretrained=True,
                                         progress=True,
                                         device=device_map[args.device],)
@@ -86,7 +89,7 @@ if __name__ == '__main__':
         def eval_func(model, data_splits):
             return {eval_key: 1}
     else:
-        eval_func = Eval()
+        eval_func = Eval(model_name=args.arch)
 
     # loss
     loss_cls = SSDLoss

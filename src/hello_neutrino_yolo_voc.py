@@ -157,7 +157,7 @@ if __name__ == '__main__':
         def eval_func(model, data_splits):
             return {eval_key: 1}
     else:
-        eval_func = YOLOEval(net=args.arch, data_root=os.path.join(args.voc_path, 'VOC2007'))
+        eval_func = YOLOEval(model_name=args.arch, data_root=os.path.join(args.voc_path, 'VOC2007'))
 
     # loss
     loss_cls = YOLOLoss

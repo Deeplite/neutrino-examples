@@ -21,11 +21,10 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
 
 
 class YOLOEval(TorchEvaluationFunction):
-    def __init__(self, model_name, data_root, dataset_type, num_classes, test_img_size):
+    def __init__(self, model_name, data_root, dataset_type, test_img_size):
         self._gt = None
         self._data_root = data_root
         self._dataset_type = dataset_type
-        self._num_classes = num_classes
         self._test_img_size = test_img_size
         self._evaluation_fn = get_eval_function(model_name=model_name, dataset_name=self._dataset_type)
 

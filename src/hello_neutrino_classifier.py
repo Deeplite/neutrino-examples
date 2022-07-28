@@ -42,16 +42,19 @@ if __name__ == "__main__":
                                         progress=True,
                                         device=device_map[args.device])
 
-    config = {'deepsearch': args.deepsearch,
-              'level': args.level,
-              'delta': args.delta,
-              'device': args.device,
-              'optimization': args.optimization,
-              'use_horovod': args.horovod,
-              'bn_fusion': args.bn_fuse,
-              'export':{'format': ['onnx']},
-              'onnx_precision': 'fp16' if args.fp16 else 'fp32',
-              }
+    config = {
+        'deepsearch': args.deepsearch,
+        'level': args.level,
+        'delta': args.delta,
+        'device': args.device,
+        'optimization': args.optimization,
+        'use_horovod': args.horovod,
+        'bn_fusion': args.bn_fuse,
+        'export': {
+            'format': ['onnx'],
+            'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}
+        }
+    }
 
     optimized_model = Neutrino(framework=TorchFramework(),
                                data=data_splits,

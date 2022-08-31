@@ -87,6 +87,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.02, help='metric drop tolerance')
     parser.add_argument('--deepsearch', action='store_true', help="to consume the delta as much as possible")
     parser.add_argument('--dryrun', action='store_true', help="force all loops to early break")
+    parser.add_argument('--fp16', action='store_true', help="export to fp16 as well if it is possible")
     parser.add_argument('--horovod', action='store_true', help="activate horovod")
     parser.add_argument('--device', type=str, metavar='DEVICE', default='GPU',
                         help='Device to use, CPU or GPU (however locked to GPU for now)',
@@ -150,19 +151,23 @@ if __name__ == '__main__':
     loss_kwargs = {'net': args.arch, 'device': device_map[args.device]}
 
     # custom config
-    config = {'deepsearch': args.deepsearch,
-              'delta': args.delta,
-              'device': args.device,
-              'use_horovod': args.horovod,
-              'task_type': 'segmentation',
-              'bn_fusion': args.bn_fuse,
-              'full_trainer': {'eval_key': eval_key,
-                               # uncomment these two below if you want to try other optimizer / scheduler
-                               # 'optimizer': UNetNativeOptimizerFactory,
-                               # 'scheduler': {'factory': UNetNativeSchedulerFactory, 'eval_based': False}
-                               },
-                'export':{'format': ['onnx']},
-              }
+    config = {
+        'deepsearch': args.deepsearch,
+        'delta': args.delta,
+        'device': args.device,
+        'use_horovod': args.horovod,
+        'task_type': 'segmentation',
+        'bn_fusion': args.bn_fuse,
+        'full_trainer': {'eval_key': eval_key,
+                        # uncomment these two below if you want to try other optimizer / scheduler
+                        # 'optimizer': UNetNativeOptimizerFactory,
+                        # 'scheduler': {'factory': UNetNativeSchedulerFactory, 'eval_based': False}
+                        },
+        'export': {
+            'format': ['onnx'],
+            'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}
+        }
+    }
 
     optimized_model = Neutrino(TorchFramework(),
                                data=data_splits,

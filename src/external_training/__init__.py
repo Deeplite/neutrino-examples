@@ -16,7 +16,8 @@ class YoloTrainingLoop(ExternalTrainingLoop):
             '--hp_config', str(config.hp_config),
             '--test_img_res', str(config.test_img_size) if isinstance(config.test_img_size, int) else 0,
             '--train_img_res', str(config.img_size) if isinstance(config.img_size, int) else 0,
-            '--device=%s' % ','.join(map(lambda s: str(s), range(WORLD_SIZE)))
+            '--device=%s' % ','.join(map(lambda s: str(s), range(WORLD_SIZE))),
+            '--epochs', str(config.epochs)
         ])
         super().__init__(self._train_yolo, opt)
         self.ft_epochs = config.ft_epochs

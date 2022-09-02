@@ -11,10 +11,6 @@ from neutrino.framework.functions import LossFunction
 from neutrino.framework.nn import NativeOptimizerFactory
 from neutrino.framework.torch_nn import DefaultTorchNativeSchedulerFactory
 from neutrino.framework.torch_framework import TorchFramework
-try:
-    from external_training import YoloTrainingLoop
-except ModuleNotFoundError as e:
-    print('Missing required packages for external training loop: ', e)
 
 from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
@@ -22,6 +18,11 @@ from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
 from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name, get_eval_function
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
+
+try:
+    from external_training import YoloTrainingLoop
+except ModuleNotFoundError as e:
+    print('Missing required packages for external training loop: ', e)
 
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv('RANK', -1))
@@ -138,8 +139,6 @@ if __name__ == '__main__':
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo3', help='model architecture',
         choices=['yolo3', 'yolo4s', 'yolo4m', 'yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x'])
-    parser.add_argument('--epochs', default=50, type=int, help='number of fine-tuning epochs')
-    parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
     parser.add_argument('--lr', default=None, type=float, help='learning rate for training quantized model')
 
     # neutrino args
@@ -149,6 +148,8 @@ if __name__ == '__main__':
     parser.add_argument('--horovod', action='store_true', help="activate horovod")
     parser.add_argument('--device', type=str, metavar='DEVICE', default='GPU', help='Device to use, CPU or GPU',
                         choices=['GPU', 'CPU'])
+    parser.add_argument('--epochs', default=50, type=int, help='number of fine-tuning epochs')
+    parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
     parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
     parser.add_argument('--eval_freq', type=int, default=2,
                         help='frequency at which perform evaluation')
@@ -178,7 +179,6 @@ if __name__ == '__main__':
         # litle hack for yolo ddp
         from external_training.yolo_utils.general import set_logging
         set_logging(RANK)
-
 
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
 
@@ -241,12 +241,10 @@ if __name__ == '__main__':
         },
     }
 
+    config['full_trainer'] = get_yolo5_6_config(config['full_trainer'], args.lr)
     if args.external_tl:
         trainer = YoloTrainingLoop(args)
         config['external_training_loop'] = trainer
-    else:
-        # get default yolo optimizer, scheduler
-        config['full_trainer'] = get_yolo5_6_config(config['full_trainer'], args.lr)
 
     optimized_model = Neutrino(TorchFramework(),
                                data=data_splits,

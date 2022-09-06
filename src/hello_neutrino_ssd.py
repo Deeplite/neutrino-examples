@@ -41,7 +41,7 @@ class Eval(TorchEvaluationFunction):
 
 class SSDLoss(LossFunction):
     def __init__(self, model_name, device="cuda"):
-        if 'vgg' in model_name:
+        if 'vgg' or 'resnet' in model_name:
             config = VGG_CONFIG()
         elif 'mb' in model_name:
             config = MOBILENET_CONFIG()
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='mb2_ssd', 
-        choices=('mb2_ssd', 'mb1_ssd', 'mb2_ssd_lite', 'vgg16_ssd'),
+        choices=('mb2_ssd', 'mb1_ssd', 'mb2_ssd_lite', 'vgg16_ssd', 'resnet18_ssd'),
         help='model architecture, coco only supported for mb2_ssd, other choices for VOC')
 
     # neutrino args

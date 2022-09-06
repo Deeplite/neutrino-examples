@@ -24,25 +24,25 @@ Different object detection use-cases and examples are provided to play around wi
 To optimize a `SSD-300` model on [`VOC 2007 dataset`](http://host.robots.ox.ac.uk/pascal/VOC/), run the following,
 
 ```{.python}
-    python src/hello_neutrino_ssd_voc.py --arch resnet18_ssd --delta 0.05 --voc_path  ~/PATH/TO/VOCdevkit
+    python src/hello_neutrino_ssd.py --arch resnet18_ssd --delta 0.05 --dataset voc -r  ~/PATH/TO/VOCdevkit
 ```
 
 To optimize a `SSD-300` model with `Mobilenet_v2` backend on [`COCO dataset`](https://cocodataset.org/#home), run the following,
 
 ```{.python}
-    python src/hello_neutrino_ssd_coco.py --arch mb2_ssd --delta 0.05 --coco_path ~/PATH/TO/coco2017
+    python src/hello_neutrino_ssd.py --arch mb2_ssd --delta 0.05 --dataset coco -r ~/PATH/TO/coco2017
 ```
 
 To optimize a `YOLOv5` model on [`VOC 2007 dataset`](http://host.robots.ox.ac.uk/pascal/VOC/), run the following,
 
 ```{.python}
-    python src/hello_neutrino_yolo_voc.py --arch yolo5_6s --delta 0.05 --voc_path ~/PATH/TO/VOCdevkit
+    python src/hello_neutrino_yolo.py --arch yolo5_6s --delta 0.05 --dataset voc -r ~/PATH/TO/VOCdevkit
 ```
 
 To optimize a `YOLOv5` model on [`COCO dataset`](https://cocodataset.org/#home), run the following,
 
 ```{.python}
-    python src/hello_neutrino_yolo_coco.py --arch yolo5_6s --delta 0.05 --coco_path ~/PATH/TO/coco2017
+    python src/hello_neutrino_yolo.py --arch yolo5_6s --delta 0.05 --dataset coco -r ~/PATH/TO/coco2017
 ```
 
 The `delta` of 0.05 denotes the maximum affordable reduction in the mAP (Mean Average Precision) of the model during optimization. Feel free to play around with different object detection models and datasets, along with different `delta` values to get different optimized results. The `arch` and the `datasets` can be customized with any native PyTorch pretrained model.

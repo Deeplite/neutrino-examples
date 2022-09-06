@@ -1,6 +1,6 @@
+import os
 import argparse
 from pathlib import Path
-
 import torch
 import torch.nn as nn
 from pycocotools.coco import COCO
@@ -8,9 +8,9 @@ from pycocotools.coco import COCO
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
 from neutrino.framework.functions import LossFunction
-from neutrino.framework.torch_framework import TorchFramework
 from neutrino.framework.nn import NativeOptimizerFactory
 from neutrino.framework.torch_nn import DefaultTorchNativeSchedulerFactory
+from neutrino.framework.torch_framework import TorchFramework
 
 from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
@@ -19,22 +19,38 @@ from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name, get_e
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
 
+try:
+    from external_training import YoloTrainingLoop
+except ModuleNotFoundError as e:
+    print('Missing required packages for external training loop: ', e)
+
+LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
+RANK = int(os.getenv('RANK', -1))
+# WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
+
 logger = getLogger(__name__)
 
 
 class YOLOEval(TorchEvaluationFunction):
-    def __init__(self, model_name, data_root):
-        self.data_root = data_root
-        self._gt = COCO(Path(self.data_root) / "annotations/instances_val2017.json")
-        self._evaluation_fn = get_eval_function(model_name=model_name, dataset_name='coco')
+    def __init__(self, model_name, dataset_name, data_root, num_classes, test_img_size):
+        self._data_root = data_root
+        self._evaluation_fn = get_eval_function(dataset_name=dataset_name, model_name=model_name)
+        self._gt = None
+        if dataset_name == 'voc':
+            self._data_root = Path(self._data_root) / "VOC2007"
+        if dataset_name == 'coco':
+            self._gt = COCO(Path(self._data_root) / "annotations/instances_val2017.json")
+        self._num_classes = num_classes
+        self._test_img_size = test_img_size
 
     def _compute_inference(self, model, data_loader, **kwargs):
         # silent **kwargs
-        return self._evaluation_fn(model=model, gt=self._gt, data_root=self.data_root)
+        return self._evaluation_fn(model=model, data_root=self._data_root, gt=self._gt,
+                                   num_classes=self._num_classes, img_size=self._test_img_size)
 
 
 class YOLOLoss(LossFunction):
-    def __init__(self, num_classes=80, device='cuda', model=None):
+    def __init__(self, num_classes=20, device='cuda', model=None):
         self.criterion = YoloV5Loss(num_classes=num_classes, model=model, device=device)
         self.torch_device = device
 
@@ -116,14 +132,14 @@ yolo5_6_finetune_config = {
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # model/dataset args
-    parser.add_argument('--coco_path', default='/neutrino/datasets/coco2017/',
-                        help='coco data path contains train2017 and val2017')
+    parser.add_argument('--dataset', metavar='DATASET', default='voc', help='dataset to use')
+    parser.add_argument('-r', '--data_root', metavar='PATH', default='/neutrino/datasets/',
+                        help='dataset data root path')
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
-    parser.add_argument('--epochs', default=50, type=int, help='number of fine-tuning epochs')
+    parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo3', help='model architecture',
+        choices=['yolo3', 'yolo4s', 'yolo4m', 'yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x'])
     parser.add_argument('--lr', default=None, type=float, help='learning rate for training quantized model')
-    parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo4m', help='model architecture',
-        choices=['yolo4s', 'yolo4m', 'yolo5_6n', 'yolo5_6s', 'yolo5_6m'])
 
     # neutrino args
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.05, help='accuracy drop tolerance')
@@ -133,23 +149,57 @@ if __name__ == '__main__':
     parser.add_argument('--horovod', action='store_true', help="activate horovod")
     parser.add_argument('--device', type=str, metavar='DEVICE', default='GPU', help='Device to use, CPU or GPU',
                         choices=['GPU', 'CPU'])
+    parser.add_argument('--epochs', default=50, type=int, help='number of fine-tuning epochs')
+    parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
     parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
+    parser.add_argument('--eval_freq', type=int, default=2,
+                        help='frequency at which perform evaluation')
+    parser.add_argument('--img_size', type=int, metavar='XXX', default=None,
+                        help='img size for train dataset')
+    parser.add_argument('--test_img_size', type=int, metavar='XXX', default=None,
+                        help='img size for test dataset')
+    parser.add_argument('--external_tl', action='store_true')
+
+    # external args
+    parser.add_argument('--local_rank', type=int, default=-1, help='DDP parameter, do not modify')
+    parser.add_argument('--hp_config', type=str, default='finetune',
+                        help='hyper-parameters config only recognized by the train_yolo.py script')
+
+    # DDP mode
+    if LOCAL_RANK != -1:
+        assert torch.cuda.device_count() > LOCAL_RANK, 'insufficient CUDA devices for DDP command'
+        torch.cuda.set_device(LOCAL_RANK)
+        torch.distributed.init_process_group(backend="nccl" if torch.distributed.is_nccl_available() else "gloo")
+
     args = parser.parse_args()
+
+    if LOCAL_RANK != -1 and args.horovod:
+        raise RuntimeError("Do not run horovod and torch.distributed!")
+
+    if args.external_tl:
+        # litle hack for yolo ddp
+        from external_training.yolo_utils.general import set_logging
+        set_logging(RANK)
+
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
 
-    data_splits = get_data_splits_by_name(
-        data_root=args.coco_path,
-        dataset_name='coco',
-        model_name=args.arch,
-        batch_size=args.batch_size,
-        num_workers=args.workers,
-        device=device_map[args.device],
+    if args.dataset == 'voc':
+        num_classes = 20
+    else:
+        num_classes = 80
 
+    data_splits = get_data_splits_by_name(dataset_name=args.dataset,
+                                          model_name=args.arch,
+                                          num_classes=num_classes,
+                                          data_root=args.data_root,
+                                          batch_size=args.batch_size,
+                                          num_workers=args.workers,
+                                          device=device_map[args.device]
     )
     fp = TorchForwardPass(model_input_pattern=(0, '_', '_', '_'))
 
     reference_model = get_model_by_name(model_name=args.arch,
-                                        dataset_name='coco',
+                                        dataset_name=args.dataset,
                                         pretrained=True,
                                         progress=True,
                                         device=device_map[args.device])
@@ -157,14 +207,16 @@ if __name__ == '__main__':
     # eval func
     eval_key = 'mAP'
     if args.dryrun:
-        def eval_func(model, data_splits):
+        def eval_func(model, data_splits, device=None):
             return {eval_key: 1}
     else:
-        eval_func = YOLOEval(model_name=args.arch, data_root=args.coco_path)
+        eval_func = YOLOEval(model_name=args.arch, dataset_name=args.dataset,
+                             data_root=args.data_root, num_classes=num_classes,
+                             test_img_size=args.test_img_size)
 
     # loss
     loss_cls = YOLOLoss
-    loss_kwargs = {'device': device_map[args.device], 'model': reference_model}
+    loss_kwargs = {'device': device_map[args.device], 'model': reference_model, 'num_classes': num_classes}
 
     # custom config
     config = {
@@ -182,18 +234,21 @@ if __name__ == '__main__':
             'epochs': args.epochs,
             'eval_key': eval_key,
             'early_stopping_patience': 20,
-            'loop_test': args.dryrun
+            'loop_test': args.dryrun,
+            'eval_freq': args.eval_freq
         },
         'fine_tuner': {
             'loop_params': {
-                'epochs': 1,
+                'epochs': args.ft_epochs,
                 'loop_test': args.dryrun
             }
         },
     }
 
-    # get default yolo optimizer, scheduler
     config['full_trainer'] = get_yolo5_6_config(config['full_trainer'], args.lr)
+    if args.external_tl:
+        trainer = YoloTrainingLoop(args)
+        config['external_training_loop'] = trainer
 
     optimized_model = Neutrino(TorchFramework(),
                                data=data_splits,

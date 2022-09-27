@@ -16,8 +16,6 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18', help='model architecture')
 
     # neutrino args
-    parser.add_argument('--lr', default=0.1, type=float, 
-                        help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=1, help='accuracy drop tolerance')
     parser.add_argument('-l', '--level', type=int, default=1, help='level', choices=(1, 2))
     parser.add_argument('-o', '--optimization', type=str, default='compression', choices=('compression', 'latency'))
@@ -27,6 +25,10 @@ if __name__ == "__main__":
     parser.add_argument('--horovod', action='store_true', help="activate horovod")
     parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
     parser.add_argument('--device', type=str, metavar='DEVICE', default='GPU', help='Device to use, CPU or GPU')
+    parser.add_argument('--lr', default=0.1, type=float, 
+                        help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
+    parser.add_argument('--ft_lr', default=0.1, type=float, help='learning rate during fine-tuning iterations')
+    parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
 
     args = parser.parse_args()
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
@@ -56,7 +58,13 @@ if __name__ == "__main__":
             'format': ['onnx'],
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}
         },
-        'full_trainer': {'optimizer': {'lr': args.lr}}
+        'full_trainer': {'optimizer': {'lr': args.lr}},
+        'fine_tuner': {
+            'loop_params': {
+                'epochs': args.ft_epochs,
+                'optimizer': {'lr': args.ft_lr}
+            }
+        }
     }
 
     optimized_model = Neutrino(framework=TorchFramework(),

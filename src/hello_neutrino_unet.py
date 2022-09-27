@@ -84,8 +84,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_classes', type=int, default=20, help='number of classes to use (only for voc)')
 
     # neutrino args
-    parser.add_argument('--lr', default=0.001, type=float, 
-                        help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.02, help='metric drop tolerance')
     parser.add_argument('--deepsearch', action='store_true', help="to consume the delta as much as possible")
     parser.add_argument('--dryrun', action='store_true', help="force all loops to early break")
@@ -95,6 +93,10 @@ if __name__ == '__main__':
                         help='Device to use, CPU or GPU (however locked to GPU for now)',
                         choices=['GPU', 'CPU'])
     parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
+    parser.add_argument('--lr', default=0.001, type=float, 
+                        help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
+    parser.add_argument('--ft_lr', default=0.001, type=float, help='learning rate during fine-tuning iterations')
+    parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
 
     args = parser.parse_args()
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
@@ -166,6 +168,12 @@ if __name__ == '__main__':
                         # 'optimizer': UNetNativeOptimizerFactory(lr=args.lr),
                         # 'scheduler': {'factory': UNetNativeSchedulerFactory, 'eval_based': False}
                         },
+        'fine_tuner': {
+            'loop_params': {
+                'epochs': args.ft_epochs,
+                'optimizer': {'lr': args.ft_lr}
+            }
+        },
         'export': {
             'format': ['onnx'],
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}

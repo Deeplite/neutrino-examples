@@ -272,8 +272,7 @@ if __name__ == '__main__':
         },
         'fine_tuner': {
             'loop_params': {
-                'epochs': args.ft_epochs,
-                'loop_test': True
+                'epochs': args.ft_epochs
             }
         },
         'custom_compression': {

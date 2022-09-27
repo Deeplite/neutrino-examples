@@ -133,15 +133,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # model/dataset args
     parser.add_argument('--dataset', metavar='DATASET', default='voc', help='dataset to use')
-    parser.add_argument('-r', '--data_root', metavar='PATH', default='/neutrino/datasets/',
+    parser.add_argument('-r', '--data_root', metavar='PATH', default='/neutrino/datasets/VOCdevkit',
                         help='dataset data root path')
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo3', help='model architecture',
         choices=['yolo3', 'yolo4s', 'yolo4m', 'yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x'])
-    parser.add_argument('--lr', default=None, type=float, help='learning rate for training quantized model')
 
     # neutrino args
+    parser.add_argument('--lr', default=None, type=float, help='learning rate for training Yolo model')
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.05, help='accuracy drop tolerance')
     parser.add_argument('--deepsearch', action='store_true', help="to consume the delta as much as possible")
     parser.add_argument('--dryrun', action='store_true', help="force all loops to early break")

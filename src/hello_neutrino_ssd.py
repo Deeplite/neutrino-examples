@@ -76,6 +76,8 @@ if __name__ == '__main__':
         help='model architecture, coco only supported for mb2_ssd, other choices for VOC')
 
     # neutrino args
+    parser.add_argument('--lr', default=0.001, type=float, 
+                        help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.05, help='accuracy drop tolerance')
     parser.add_argument('--deepsearch', action='store_true', help="to consume the delta as much as possible")
     parser.add_argument('--dryrun', action='store_true', help="force all loops to early break")
@@ -133,7 +135,8 @@ if __name__ == '__main__':
         'export': {
             'format': ['onnx'],
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}
-        }
+        },
+        'full_trainer': {'optimizer': {'lr': args.lr}}
     }
 
     optimized_model = Neutrino(TorchFramework(),

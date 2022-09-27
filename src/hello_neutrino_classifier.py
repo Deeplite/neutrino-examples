@@ -16,6 +16,8 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18', help='model architecture')
 
     # neutrino args
+    parser.add_argument('--lr', default=0.1, type=float, 
+                        help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=1, help='accuracy drop tolerance')
     parser.add_argument('-l', '--level', type=int, default=1, help='level', choices=(1, 2))
     parser.add_argument('-o', '--optimization', type=str, default='compression', choices=('compression', 'latency'))
@@ -53,7 +55,8 @@ if __name__ == "__main__":
         'export': {
             'format': ['onnx'],
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}
-        }
+        },
+        'full_trainer': {'optimizer': {'lr': args.lr}}
     }
 
     optimized_model = Neutrino(framework=TorchFramework(),

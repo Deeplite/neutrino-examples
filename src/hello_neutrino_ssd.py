@@ -41,7 +41,7 @@ class Eval(TorchEvaluationFunction):
 
 class SSDLoss(LossFunction):
     def __init__(self, model_name, device="cuda"):
-        if 'vgg' in model_name:
+        if 'vgg' or 'resnet' in model_name:
             config = VGG_CONFIG()
         elif 'mb' in model_name:
             config = MOBILENET_CONFIG()
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='mb2_ssd', 
-        choices=('mb2_ssd', 'mb1_ssd', 'mb2_ssd_lite', 'vgg16_ssd'),
+        choices=('mb2_ssd', 'mb1_ssd', 'mb2_ssd_lite', 'vgg16_ssd', 'resnet18_ssd'),
         help='model architecture, coco only supported for mb2_ssd, other choices for VOC')
 
     # neutrino args
@@ -84,6 +84,11 @@ if __name__ == '__main__':
     parser.add_argument('--device', type=str, metavar='DEVICE', default='GPU', help='Device to use, CPU or GPU',
                         choices=['GPU', 'CPU'])
     parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
+    parser.add_argument('--lr', default=0.001, type=float, 
+                        help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
+    parser.add_argument('--ft_lr', default=0.001, type=float, help='learning rate during fine-tuning iterations')
+    parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
+
     args = parser.parse_args()
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
 
@@ -133,6 +138,13 @@ if __name__ == '__main__':
         'export': {
             'format': ['onnx'],
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}
+        },
+        'full_trainer': {'optimizer': {'lr': args.lr}},
+        'fine_tuner': {
+            'loop_params': {
+                'epochs': args.ft_epochs,
+                'optimizer': {'lr': args.ft_lr}
+            }
         }
     }
 

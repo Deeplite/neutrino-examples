@@ -57,10 +57,10 @@ class UNetLoss(LossFunction):
 
 
 class UNetNativeOptimizerFactory(NativeOptimizerFactory):
-    def __init__(self):
-        self.lr = 0.001
-        self.momentum = 0.9
-        self.weight_decay = 1e-8
+    def __init__(self, lr=.001, momentum=.9, weight_decay=1e-8):
+        self.lr = lr
+        self.momentum = momentum
+        self.weight_decay = weight_decay
 
     def make(self, native_model):
         return torch.optim.RMSprop(native_model.parameters(), lr=self.lr, weight_decay=self.weight_decay,
@@ -93,6 +93,10 @@ if __name__ == '__main__':
                         help='Device to use, CPU or GPU (however locked to GPU for now)',
                         choices=['GPU', 'CPU'])
     parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
+    parser.add_argument('--lr', default=0.001, type=float, 
+                        help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
+    parser.add_argument('--ft_lr', default=0.001, type=float, help='learning rate during fine-tuning iterations')
+    parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
 
     args = parser.parse_args()
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
@@ -159,10 +163,17 @@ if __name__ == '__main__':
         'task_type': 'segmentation',
         'bn_fusion': args.bn_fuse,
         'full_trainer': {'eval_key': eval_key,
+                         'optimizer': {'lr': args.lr}
                         # uncomment these two below if you want to try other optimizer / scheduler
-                        # 'optimizer': UNetNativeOptimizerFactory,
+                        # 'optimizer': UNetNativeOptimizerFactory(lr=args.lr),
                         # 'scheduler': {'factory': UNetNativeSchedulerFactory, 'eval_based': False}
                         },
+        'fine_tuner': {
+            'loop_params': {
+                'epochs': args.ft_epochs,
+                'optimizer': {'lr': args.ft_lr}
+            }
+        },
         'export': {
             'format': ['onnx'],
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}

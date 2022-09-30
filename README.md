@@ -67,3 +67,7 @@ To improve the accuracy, try using the `--skip_layers_ratio` argument to skip qu
 
 If your model will process a different image resolution at runtime, pass it with `--runtime_resolution HxW` arguemnt. Ex: `--runtime_resolution 320x320`. This way the exported model
 will accept images of the correct resolution.
+
+
+## Distributed Training
+To setup Horovod for training with multiple GPUs, see the guide in the [documentation](https://docs.deeplite.ai/neutrino/samples.html?highlight=distributed#running-on-multi-gpu-on-a-single-machine) and make sure to pass argument `--horovod` to the example script. Note that Neutrino scales the learning rate by the number of GPUs, so passing a learning rate of 0.1 to Neutrino with 4 GPUs will apply a learning rate of 0.4 to the optimizer. 

@@ -27,8 +27,8 @@ if __name__ == "__main__":
     parser.add_argument('--device', type=str, metavar='DEVICE', default='GPU', help='Device to use, CPU or GPU')
     parser.add_argument('--lr', default=0.1, type=float, 
                         help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
-    parser.add_argument('--ft_lr', default=0.1, type=float, help='learning rate during fine-tuning iterations')
-    parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
+    parser.add_argument('--ft_lr', default=0.01, type=float, help='learning rate during fine-tuning iterations')
+    parser.add_argument('--ft_epochs', default=2, type=int, help='number of fine-tuning epochs')
 
     args = parser.parse_args()
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}

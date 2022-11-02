@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     # neutrino args
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=1, help='accuracy drop tolerance')
-    parser.add_argument('-l', '--level', type=int, default=1, help='level', choices=(1, 2))
+    parser.add_argument('-l', '--level', type=int, default=1, help='level', choices=(1, 3))
     parser.add_argument('-o', '--optimization', type=str, default='compression', choices=('compression', 'latency'))
     parser.add_argument('--deepsearch', action='store_true', help="to consume the delta as much as possible")
     parser.add_argument('--fp16', action='store_true', help="export to fp16 as well if it is possible")

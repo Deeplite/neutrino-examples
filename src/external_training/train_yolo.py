@@ -129,6 +129,7 @@ def train(opt, model=None, dataset_splits=None, fine_tuning=False):
             distributed=(cuda and RANK != -1),
             **dataset_kwargs
         )
+        print('got the data')
 
     test_img_size = dataset_splits["test"].dataset._img_size
     train_img_size = dataset_splits["train"].dataset._img_size
@@ -188,7 +189,7 @@ def train(opt, model=None, dataset_splits=None, fine_tuning=False):
     LOGGER.info(f"{colorstr('optimizer:')} {type(optimizer).__name__} with parameter groups "
                 f"{len(g0)} weight, {len(g1)} weight (no decay), {len(g2)} bias")
     del g0, g1, g2
-
+    print('optim done')
     # Scheduler
     if fine_tuning:
         lf = lambda x: 1
@@ -200,7 +201,7 @@ def train(opt, model=None, dataset_splits=None, fine_tuning=False):
 
     # EMA
     ema = ModelEMA(model) if RANK in [-1, 0] else None
-
+    print('ema done')
     start_epoch, best_fitness = 0, 0.0
 
     # Image sizes
@@ -226,7 +227,7 @@ def train(opt, model=None, dataset_splits=None, fine_tuning=False):
     # DDP mode
     if cuda and RANK != -1:
         model = DDP(model, device_ids=[LOCAL_RANK], output_device=LOCAL_RANK)
-
+    print('ddp model done')
     # Model parameters
     hyp['giou'] *= 3. / nl  # scale to layers
     hyp['box'] = hyp['giou']
@@ -243,6 +244,7 @@ def train(opt, model=None, dataset_splits=None, fine_tuning=False):
         device=device,
         hyp_cfg=hyp_loss,
     )
+    print('got eval')
 
     # Start training
     t0 = time.time()
@@ -265,6 +267,7 @@ def train(opt, model=None, dataset_splits=None, fine_tuning=False):
     if RANK != -1:
         print("Start of loop distributed.barrier %d" % RANK)
         torch.distributed.barrier()
+        print("\npassed Start of loop distributed.barrier %d" % RANK)
 
     LOGGER.info(f'Image sizes {train_img_size} train, {test_img_size} val\n'
                 f'Using {train_loader.num_workers} dataloader workers\n'
@@ -462,15 +465,13 @@ def train(opt, model=None, dataset_splits=None, fine_tuning=False):
                     )
                     LOGGER.info(f'Eval metrics: {Aps}')
 
-                    return model #, dataset_splits
-
         # LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}")
 
     torch.cuda.empty_cache()
     if RANK != -1:
-        print("End of loop distributed.barrier %d" % RANK)
+        print("\nEnd of loop distributed.barrier %d" % RANK)
         torch.distributed.barrier()
-        print('passed barrier {}'.format(RANK))
+        print('\npassed End of loop barrier {}'.format(RANK))
 
     # if ema:
     #     return ema.ema #, dataset_splits

@@ -1,10 +1,8 @@
 import argparse
 
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
 from neutrino.framework.torch_framework import TorchFramework
 from neutrino.job import Neutrino
-
-from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -23,9 +21,8 @@ if __name__ == "__main__":
     parser.add_argument('--fp16', action='store_true', help="export to fp16 as well if it is possible")
     parser.add_argument('--dryrun', action='store_true', help="force all loops to early break")
     parser.add_argument('--horovod', action='store_true', help="activate horovod")
-    parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
     parser.add_argument('--device', type=str, metavar='DEVICE', default='GPU', help='Device to use, CPU or GPU')
-    parser.add_argument('--lr', default=0.1, type=float, 
+    parser.add_argument('--lr', default=0.1, type=float,
                         help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
     parser.add_argument('--ft_lr', default=0.01, type=float, help='learning rate during fine-tuning iterations')
     parser.add_argument('--ft_epochs', default=2, type=int, help='number of fine-tuning epochs')
@@ -53,7 +50,6 @@ if __name__ == "__main__":
         'device': args.device,
         'optimization': args.optimization,
         'use_horovod': args.horovod,
-        'bn_fusion': args.bn_fuse,
         'export': {
             'format': ['onnx'],
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}

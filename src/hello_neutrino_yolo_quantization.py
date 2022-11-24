@@ -1,22 +1,23 @@
-import argparse, os
+import argparse
+import os
 from pathlib import Path
-from pycocotools.coco import COCO
+
 import torch
 import torch.nn as nn
-
-from neutrino.framework.torch_framework import TorchFramework
 from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
-from neutrino.job import Neutrino
-from neutrino.nlogger import getLogger
-
-from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name, get_eval_function
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import Detect
+from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
+from deeplite_torch_zoo import (get_data_splits_by_name, get_eval_function,
+                                get_model_by_name)
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import \
+    Detect
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
-
 from neutrino.framework.functions import LossFunction
 from neutrino.framework.nn import NativeOptimizerFactory
-from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
+from neutrino.framework.torch_framework import TorchFramework
+from neutrino.job import Neutrino
+from neutrino.nlogger import getLogger
+from pycocotools.coco import COCO
 
 try:
     from external_training import YoloTrainingLoop
@@ -151,7 +152,6 @@ if __name__ == '__main__':
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
     parser.add_argument('-a', '--arch', metavar='ARCH', default='yolo3', help='model architecture',
         choices=['yolo3', 'yolo4s', 'yolo4m', 'yolo5_6n', 'yolo5_6s', 'yolo5_6m'])
-    parser.add_argument('--test_image_size', type=int, default=448, help='image resolution for evaluation')
 
     # neutrino args
     parser.add_argument('-d', '--delta', type=float, metavar='DELTA', default=0.05, help='accuracy drop tolerance')
@@ -162,7 +162,6 @@ if __name__ == '__main__':
                         choices=['GPU', 'CPU'])
     parser.add_argument('--epochs', default=50, type=int, help='number of fine-tuning epochs')
     parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
-    parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
     parser.add_argument('--eval_freq', type=int, default=4,
                         help='frequency at which perform evaluation')
     parser.add_argument('--lr', default=None, type=float, help='learning rate for training quantized model')
@@ -201,14 +200,9 @@ if __name__ == '__main__':
 
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
 
-    arch_name = args.arch
-    if args.dataset == 'voc':
-        num_classes = 20
-    elif args.dataset == 'coco':
-        num_classes = 80
-    if args.dataset == 'wider_face':
-        num_classes = 8
-
+    data_splits_kwargs = {}
+    if args.img_size is not None:
+        data_splits_kwargs = {'img_size': args.img_size}
     data_splits = get_data_splits_by_name(
         data_root=args.data_root,
         dataset_name=args.dataset,
@@ -216,11 +210,16 @@ if __name__ == '__main__':
         batch_size=args.batch_size,
         num_workers=args.workers,
         device=device_map[args.device],
-        num_classes=num_classes
+        **data_splits_kwargs,
     )
+    num_classes = data_splits['train'].dataset.num_classes
+
+    if args.test_img_size is None:
+        args.test_img_size = data_splits["test"].dataset._img_size
+
     fp = TorchForwardPass(model_input_pattern=(0, '_', '_', '_'))
 
-    reference_model = get_model_by_name(model_name=arch_name,
+    reference_model = get_model_by_name(model_name=args.arch,
                                         dataset_name=args.dataset,
                                         pretrained=True,
                                         progress=True,
@@ -238,7 +237,7 @@ if __name__ == '__main__':
             return {eval_key: 1}
     else:
         eval_func = YOLOEval(model_name=args.arch, data_root=args.data_root,
-                             dataset_type=args.dataset, test_img_size=args.test_image_size)
+                             dataset_type=args.dataset, test_img_size=args.test_img_size)
 
     # loss
     loss_cls = YOLOLoss
@@ -261,7 +260,6 @@ if __name__ == '__main__':
         'delta': args.delta,
         'device': args.device,
         'use_horovod': args.horovod,
-        'bn_fusion': args.bn_fuse,
         'full_trainer': {
             'epochs': args.epochs,
             'eval_skip': 1,

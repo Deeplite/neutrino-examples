@@ -1,25 +1,20 @@
 import argparse
-import os
+
 import torch
 import torch.nn as nn
-
-from neutrino.framework.functions import LossFunction
-from neutrino.framework.torch_framework import TorchFramework
-from neutrino.framework.torch_nn import NativeOptimizerFactory, NativeSchedulerFactory
-from deeplite.profiler import Device
 from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
+from deeplite_torch_zoo.src.segmentation.unet_scse.repo.src.losses.multi import \
+    MultiClassCriterion
+from deeplite_torch_zoo.wrappers.eval import seg_eval_func
+from deeplite_torch_zoo.wrappers.models.segmentation.unet import unet_carvana
+from neutrino.framework.functions import LossFunction
+from neutrino.framework.torch_framework import TorchFramework
+from neutrino.framework.torch_nn import (NativeOptimizerFactory,
+                                         NativeSchedulerFactory)
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
-
-from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
-from deeplite_torch_zoo.wrappers.models.segmentation.unet import unet_carvana
-from deeplite_torch_zoo.wrappers.eval import seg_eval_func
-
-from deeplite_torch_zoo.src.segmentation.unet_scse.repo.src.losses.multi import MultiClassCriterion
-from deeplite_torch_zoo.src.segmentation.unet_scse.repo.src.utils.scheduler import CosineWithRestarts
-from deeplite_torch_zoo.src.segmentation.unet_scse.repo.src.losses.multi import MultiClassCriterion
-from deeplite_torch_zoo.src.segmentation.fcn.solver import cross_entropy2d
 
 logger = getLogger(__name__)
 
@@ -92,8 +87,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', type=str, metavar='DEVICE', default='GPU',
                         help='Device to use, CPU or GPU (however locked to GPU for now)',
                         choices=['GPU', 'CPU'])
-    parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
-    parser.add_argument('--lr', default=0.001, type=float, 
+    parser.add_argument('--lr', default=0.001, type=float,
                         help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
     parser.add_argument('--ft_lr', default=0.001, type=float, help='learning rate during fine-tuning iterations')
     parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
@@ -161,7 +155,6 @@ if __name__ == '__main__':
         'device': args.device,
         'use_horovod': args.horovod,
         'task_type': 'segmentation',
-        'bn_fusion': args.bn_fuse,
         'full_trainer': {'eval_key': eval_key,
                          'optimizer': {'lr': args.lr}
                         # uncomment these two below if you want to try other optimizer / scheduler

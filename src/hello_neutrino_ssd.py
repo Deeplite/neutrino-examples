@@ -1,22 +1,21 @@
 import argparse
-import os
 from pathlib import Path
 
-from pycocotools.coco import COCO
-
-from neutrino.framework.functions import LossFunction
-from neutrino.framework.torch_framework import TorchFramework
 from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
+from deeplite_torch_zoo import (get_data_splits_by_name, get_eval_function,
+                                get_model_by_name)
+from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config import \
+    MOBILENET_CONFIG
+from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import \
+    VGG_CONFIG
+from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.nn.multibox_loss import \
+    MultiboxLoss
+from neutrino.framework.functions import LossFunction
+from neutrino.framework.torch_framework import TorchFramework
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
-
-from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name, get_eval_function
-
-from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.nn.multibox_loss import MultiboxLoss
-from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
-from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import VGG_CONFIG
-
+from pycocotools.coco import COCO
 
 logger = getLogger(__name__)
 
@@ -71,7 +70,7 @@ if __name__ == '__main__':
         # choices=['test_data_COCO.json', 'annotations/instances_val2017.json'])
     parser.add_argument('-b', '--batch_size', type=int, metavar='N', default=8, help='mini-batch size')
     parser.add_argument('-j', '--workers', type=int, metavar='N', default=4, help='number of data loading workers')
-    parser.add_argument('-a', '--arch', metavar='ARCH', default='mb2_ssd', 
+    parser.add_argument('-a', '--arch', metavar='ARCH', default='mb2_ssd',
         choices=('mb2_ssd', 'mb1_ssd', 'mb2_ssd_lite', 'vgg16_ssd', 'resnet18_ssd'),
         help='model architecture, coco only supported for mb2_ssd, other choices for VOC')
 
@@ -83,8 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('--horovod', action='store_true', help="activate horovod")
     parser.add_argument('--device', type=str, metavar='DEVICE', default='GPU', help='Device to use, CPU or GPU',
                         choices=['GPU', 'CPU'])
-    parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
-    parser.add_argument('--lr', default=0.001, type=float, 
+    parser.add_argument('--lr', default=0.001, type=float,
                         help='learning rate for training model. This LR is internally scaled by num gpus during distributed training')
     parser.add_argument('--ft_lr', default=0.001, type=float, help='learning rate during fine-tuning iterations')
     parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
@@ -100,7 +98,7 @@ if __name__ == '__main__':
         num_workers=args.workers,
         device=device_map[args.device],
     )
-    
+
     if args.dataset == 'voc':
         fp = TorchForwardPass(model_input_pattern=(0, '_', '_'))
         num_classes = 20
@@ -108,11 +106,13 @@ if __name__ == '__main__':
         fp = TorchForwardPass(model_input_pattern=(0, '_', '_', '_'))
         num_classes = 80
 
-    reference_model = get_model_by_name(model_name=args.arch,
-                                        dataset_name=args.dataset,
-                                        pretrained=True,
-                                        progress=True,
-                                        device=device_map[args.device],)
+    reference_model = get_model_by_name(
+        model_name=args.arch,
+        dataset_name=args.dataset,
+        pretrained=True,
+        progress=True,
+        device=device_map[args.device],
+    )
 
     # eval func
     eval_key = 'mAP'
@@ -134,7 +134,6 @@ if __name__ == '__main__':
         'device': args.device,
         'use_horovod': args.horovod,
         'task_type': 'object_detection',
-        'bn_fusion': args.bn_fuse,
         'export': {
             'format': ['onnx'],
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}

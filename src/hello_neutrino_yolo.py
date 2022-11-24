@@ -1,23 +1,22 @@
-import os
 import argparse
+import os
 from pathlib import Path
+
 import torch
 import torch.nn as nn
-from pycocotools.coco import COCO
-
-from neutrino.job import Neutrino
-from neutrino.nlogger import getLogger
-from neutrino.framework.functions import LossFunction
-from neutrino.framework.nn import NativeOptimizerFactory
-from neutrino.framework.torch_nn import DefaultTorchNativeSchedulerFactory
-from neutrino.framework.torch_framework import TorchFramework
-
 from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
-
-from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name, get_eval_function
+from deeplite_torch_zoo import (get_data_splits_by_name, get_eval_function,
+                                get_model_by_name)
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
+from neutrino.framework.functions import LossFunction
+from neutrino.framework.nn import NativeOptimizerFactory
+from neutrino.framework.torch_framework import TorchFramework
+from neutrino.framework.torch_nn import DefaultTorchNativeSchedulerFactory
+from neutrino.job import Neutrino
+from neutrino.nlogger import getLogger
+from pycocotools.coco import COCO
 
 try:
     from external_training import YoloTrainingLoop
@@ -151,7 +150,6 @@ if __name__ == '__main__':
                         choices=['GPU', 'CPU'])
     parser.add_argument('--epochs', default=50, type=int, help='number of fine-tuning epochs')
     parser.add_argument('--ft_epochs', default=1, type=int, help='number of fine-tuning epochs')
-    parser.add_argument('--bn_fuse', action='store_true', help="fuse batch normalization layers")
     parser.add_argument('--eval_freq', type=int, default=2,
                         help='frequency at which perform evaluation')
     parser.add_argument('--img_size', type=int, metavar='XXX', default=None,
@@ -182,20 +180,23 @@ if __name__ == '__main__':
         set_logging(RANK)
 
     device_map = {'CPU': 'cpu', 'GPU': 'cuda'}
-
-    if args.dataset == 'voc':
-        num_classes = 20
-    else:
-        num_classes = 80
-
-    data_splits = get_data_splits_by_name(dataset_name=args.dataset,
-                                          model_name=args.arch,
-                                          num_classes=num_classes,
-                                          data_root=args.data_root,
-                                          batch_size=args.batch_size,
-                                          num_workers=args.workers,
-                                          device=device_map[args.device]
+    data_splits_kwargs = {}
+    if args.img_size is not None:
+        data_splits_kwargs = {'img_size': args.img_size}
+    data_splits = get_data_splits_by_name(
+        data_root=args.data_root,
+        dataset_name=args.dataset,
+        model_name=args.arch,
+        batch_size=args.batch_size,
+        num_workers=args.workers,
+        device=device_map[args.device],
+        **data_splits_kwargs,
     )
+    num_classes = data_splits['train'].dataset.num_classes
+
+    if args.test_img_size is None:
+        args.test_img_size = data_splits["test"].dataset._img_size
+
     fp = TorchForwardPass(model_input_pattern=(0, '_', '_', '_'))
 
     reference_model = get_model_by_name(model_name=args.arch,
@@ -229,7 +230,6 @@ if __name__ == '__main__':
         'delta': args.delta,
         'device': args.device,
         'use_horovod': args.horovod,
-        'bn_fusion': args.bn_fuse,
         'full_trainer': {
             'epochs': args.epochs,
             'eval_key': eval_key,

@@ -1,6 +1,5 @@
 import argparse
 import os
-from pathlib import Path
 
 import torch
 import torch.nn as nn
@@ -8,7 +7,7 @@ from deeplite.torch_profiler.torch_data_loader import TorchForwardPass
 from deeplite.torch_profiler.torch_inference import TorchEvaluationFunction
 from deeplite_torch_zoo import (get_data_splits_by_name, get_eval_function,
                                 get_model_by_name)
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolov5_loss import \
     YoloV5Loss
 from neutrino.framework.functions import LossFunction
 from neutrino.framework.nn import NativeOptimizerFactory
@@ -16,7 +15,6 @@ from neutrino.framework.torch_framework import TorchFramework
 from neutrino.framework.torch_nn import DefaultTorchNativeSchedulerFactory
 from neutrino.job import Neutrino
 from neutrino.nlogger import getLogger
-from pycocotools.coco import COCO
 
 try:
     from external_training import YoloTrainingLoop
@@ -31,21 +29,13 @@ logger = getLogger(__name__)
 
 
 class YOLOEval(TorchEvaluationFunction):
-    def __init__(self, model_name, dataset_name, data_root, num_classes, test_img_size):
-        self._data_root = data_root
+    def __init__(self, model_name, dataset_name, num_classes):
         self._evaluation_fn = get_eval_function(dataset_name=dataset_name, model_name=model_name)
-        self._gt = None
-        if dataset_name == 'voc':
-            self._data_root = Path(self._data_root) / "VOC2007"
-        if dataset_name == 'coco':
-            self._gt = COCO(Path(self._data_root) / "annotations/instances_val2017.json")
         self._num_classes = num_classes
-        self._test_img_size = test_img_size
 
     def _compute_inference(self, model, data_loader, **kwargs):
         # silent **kwargs
-        return self._evaluation_fn(model=model, data_root=self._data_root, gt=self._gt,
-                                   num_classes=self._num_classes, img_size=self._test_img_size)
+        return self._evaluation_fn(model, data_loader, num_classes=self._num_classes)
 
 
 class YOLOLoss(LossFunction):
@@ -59,9 +49,9 @@ class YOLOLoss(LossFunction):
 
         imgs = imgs.to(self.torch_device)
         pred = model(imgs)
-        _, loss_giou, loss_conf, loss_cls = self.criterion(pred, targets, labels_length, _img_size)
+        _, loss_items = self.criterion(pred, targets, labels_length, _img_size)
 
-        return {'lgiou': loss_giou, 'lconf': loss_conf, 'lcls': loss_cls}
+        return {'lgiou': loss_items[0], 'lconf': loss_items[1], 'lcls': loss_items[2]}
 
 
 class YoloOptimizerFactory(NativeOptimizerFactory):
@@ -211,9 +201,7 @@ if __name__ == '__main__':
         def eval_func(model, data_splits, device=None):
             return {eval_key: 1}
     else:
-        eval_func = YOLOEval(model_name=args.arch, dataset_name=args.dataset,
-                             data_root=args.data_root, num_classes=num_classes,
-                             test_img_size=args.test_img_size)
+        eval_func = YOLOEval(model_name=args.arch, dataset_name=args.dataset, num_classes=num_classes)
 
     # loss
     loss_cls = YOLOLoss

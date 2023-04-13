@@ -156,7 +156,7 @@ if __name__ == '__main__':
         'use_horovod': args.horovod,
         'task_type': 'segmentation',
         'full_trainer': {'eval_key': eval_key,
-                         'optimizer': {'lr': args.lr}
+                         'optimizer': {'name': 'SGD', 'lr': args.lr}
                         # uncomment these two below if you want to try other optimizer / scheduler
                         # 'optimizer': UNetNativeOptimizerFactory(lr=args.lr),
                         # 'scheduler': {'factory': UNetNativeSchedulerFactory, 'eval_based': False}
@@ -164,7 +164,7 @@ if __name__ == '__main__':
         'fine_tuner': {
             'loop_params': {
                 'epochs': args.ft_epochs,
-                'optimizer': {'lr': args.ft_lr}
+                'optimizer': {'name': 'SGD', 'lr': args.ft_lr}
             }
         },
         'export': {

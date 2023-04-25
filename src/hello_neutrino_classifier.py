@@ -54,11 +54,11 @@ if __name__ == "__main__":
             'format': ['onnx'],
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}
         },
-        'full_trainer': {'optimizer': {'lr': args.lr}},
+        'full_trainer': {'optimizer': {'name': 'SGD', 'lr': args.lr}},
         'fine_tuner': {
             'loop_params': {
                 'epochs': args.ft_epochs,
-                'optimizer': {'lr': args.ft_lr}
+                'optimizer': {'name': 'SGD', 'lr': args.ft_lr}
             }
         }
     }

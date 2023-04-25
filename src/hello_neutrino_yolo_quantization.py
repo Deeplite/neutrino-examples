@@ -252,7 +252,7 @@ if __name__ == '__main__':
     config = {
         'task_type': 'object_detection',
         'export': {
-            'format': ['dlrt'],
+            'format': 'dlrt',
             'kwargs': {'resolutions': resolutions}
         },
         'optimization': 'quantization',

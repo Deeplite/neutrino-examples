@@ -223,7 +223,7 @@ if __name__ == '__main__':
     config = {
         'task_type': 'object_detection',
         'export': {
-            'format': ['onnx'],
+            'format': 'onnx',
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}
         },
         'deepsearch': args.deepsearch,

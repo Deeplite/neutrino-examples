@@ -168,7 +168,7 @@ if __name__ == '__main__':
             }
         },
         'export': {
-            'format': ['onnx'],
+            'format': 'onnx',
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}
         }
     }

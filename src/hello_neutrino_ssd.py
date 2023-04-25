@@ -135,7 +135,7 @@ if __name__ == '__main__':
         'use_horovod': args.horovod,
         'task_type': 'object_detection',
         'export': {
-            'format': ['onnx'],
+            'format': 'onnx',
             'kwargs': {'precision': 'fp16' if args.fp16 else 'fp32'}
         },
         'full_trainer': {'optimizer': {'name': 'SGD','lr': args.lr}},
